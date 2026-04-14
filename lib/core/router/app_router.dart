@@ -4,7 +4,10 @@ import '../../features/onboarding/presentation/screens/splash_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
-import '../../features/report_accident/presentation/screens/accident_type_screen.dart';
+import '../../features/report_accident/presentation/screens/qr_session_screen.dart';
+import '../../features/report_accident/presentation/screens/qr_scanner_screen.dart';
+import '../../features/report_accident/presentation/screens/my_reports_screen.dart';
+import '../../features/report_accident/presentation/screens/report_details_screen.dart';
 import '../../features/report_accident/presentation/screens/capture_evidence_screen.dart';
 import '../../features/report_accident/presentation/screens/location_screen.dart';
 import '../../features/report_accident/presentation/screens/driver_details_screen.dart';
@@ -47,13 +50,13 @@ class AppRouter {
           child: const LoginScreen(),
           transitionsBuilder: (context, animation, secondaryAnimation, child) {
             return SlideTransition(
-              position: Tween<Offset>(
-                begin: const Offset(1, 0),
-                end: Offset.zero,
-              ).animate(CurvedAnimation(
-                parent: animation,
-                curve: Curves.easeInOut,
-              )),
+              position:
+                  Tween<Offset>(
+                    begin: const Offset(1, 0),
+                    end: Offset.zero,
+                  ).animate(
+                    CurvedAnimation(parent: animation, curve: Curves.easeInOut),
+                  ),
               child: child,
             );
           },
@@ -71,44 +74,57 @@ class AppRouter {
         ),
       ),
       GoRoute(
-        path: '/report/accident-type',
-        name: 'accident-type',
-        pageBuilder: (context, state) => _buildSlideTransition(
-          state,
-          const AccidentTypeScreen(),
-        ),
+        path: '/report/qr-session',
+        name: 'qr-session',
+        pageBuilder: (context, state) =>
+            _buildSlideTransition(state, const QrSessionScreen()),
+      ),
+      GoRoute(
+        path: '/report/qr-scanner',
+        name: 'qr-scanner',
+        pageBuilder: (context, state) =>
+            _buildSlideTransition(state, const QrScannerScreen()),
+      ),
+      GoRoute(
+        path: '/my-reports',
+        name: 'my-reports',
+        pageBuilder: (context, state) =>
+            _buildSlideTransition(state, const MyReportsScreen()),
+      ),
+      GoRoute(
+        path: '/report-details/:id',
+        name: 'report-details',
+        pageBuilder: (context, state) {
+          final id = int.tryParse(state.pathParameters['id'] ?? '') ?? 0;
+          return _buildSlideTransition(
+            state,
+            ReportDetailsScreen(accidentId: id),
+          );
+        },
       ),
       GoRoute(
         path: '/report/capture-evidence',
         name: 'capture-evidence',
-        pageBuilder: (context, state) => _buildSlideTransition(
-          state,
-          const CaptureEvidenceScreen(),
-        ),
+        pageBuilder: (context, state) =>
+            _buildSlideTransition(state, const CaptureEvidenceScreen()),
       ),
       GoRoute(
         path: '/report/location',
         name: 'location',
-        pageBuilder: (context, state) => _buildSlideTransition(
-          state,
-          const LocationScreen(),
-        ),
+        pageBuilder: (context, state) =>
+            _buildSlideTransition(state, const LocationScreen()),
       ),
       GoRoute(
         path: '/report/driver-details',
         name: 'driver-details',
-        pageBuilder: (context, state) => _buildSlideTransition(
-          state,
-          const DriverDetailsScreen(),
-        ),
+        pageBuilder: (context, state) =>
+            _buildSlideTransition(state, const DriverDetailsScreen()),
       ),
       GoRoute(
         path: '/report/review',
         name: 'review',
-        pageBuilder: (context, state) => _buildSlideTransition(
-          state,
-          const ReviewScreen(),
-        ),
+        pageBuilder: (context, state) =>
+            _buildSlideTransition(state, const ReviewScreen()),
       ),
       GoRoute(
         path: '/report/success',
@@ -122,10 +138,7 @@ class AppRouter {
                 parent: animation,
                 curve: Curves.easeOutBack,
               ),
-              child: FadeTransition(
-                opacity: animation,
-                child: child,
-              ),
+              child: FadeTransition(opacity: animation, child: child),
             );
           },
         ),
@@ -142,13 +155,10 @@ class AppRouter {
       child: child,
       transitionsBuilder: (context, animation, secondaryAnimation, child) {
         return SlideTransition(
-          position: Tween<Offset>(
-            begin: const Offset(1, 0),
-            end: Offset.zero,
-          ).animate(CurvedAnimation(
-            parent: animation,
-            curve: Curves.easeInOut,
-          )),
+          position: Tween<Offset>(begin: const Offset(1, 0), end: Offset.zero)
+              .animate(
+                CurvedAnimation(parent: animation, curve: Curves.easeInOut),
+              ),
           child: child,
         );
       },

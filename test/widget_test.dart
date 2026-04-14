@@ -14,10 +14,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: PrimaryButton(
-              text: 'Test Button',
-              onPressed: () {},
-            ),
+            body: PrimaryButton(text: 'Test Button', onPressed: () {}),
           ),
         ),
       );
@@ -26,8 +23,9 @@ void main() {
       expect(find.byType(ElevatedButton), findsOneWidget);
     });
 
-    testWidgets('shows loading indicator when isLoading is true',
-        (tester) async {
+    testWidgets('shows loading indicator when isLoading is true', (
+      tester,
+    ) async {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
@@ -48,17 +46,12 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: PrimaryButton(
-              text: 'Disabled',
-              onPressed: null,
-            ),
+            body: PrimaryButton(text: 'Disabled', onPressed: null),
           ),
         ),
       );
 
-      final button = tester.widget<ElevatedButton>(
-        find.byType(ElevatedButton),
-      );
+      final button = tester.widget<ElevatedButton>(find.byType(ElevatedButton));
       expect(button.onPressed, isNull);
     });
   });
@@ -68,10 +61,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: SecondaryButton(
-              text: 'Secondary',
-              onPressed: () {},
-            ),
+            body: SecondaryButton(text: 'Secondary', onPressed: () {}),
           ),
         ),
       );
@@ -86,10 +76,7 @@ void main() {
       await tester.pumpWidget(
         MaterialApp(
           home: Scaffold(
-            body: CustomTextField(
-              label: 'Email',
-              hint: 'Enter email',
-            ),
+            body: CustomTextField(label: 'Email', hint: 'Enter email'),
           ),
         ),
       );
@@ -163,10 +150,7 @@ void main() {
       await tester.pumpWidget(
         const MaterialApp(
           home: Scaffold(
-            body: StepProgressIndicator(
-              totalSteps: 3,
-              currentStep: 1,
-            ),
+            body: StepProgressIndicator(totalSteps: 3, currentStep: 1),
           ),
         ),
       );
@@ -198,18 +182,23 @@ void main() {
   group('ReportProvider', () {
     test('initial state', () {
       final provider = ReportProvider();
-      expect(provider.selectedAccidentType, isNull);
+      expect(provider.sessionId, isNull);
       expect(provider.capturedPhotos, isEmpty);
       expect(provider.locationText, 'Amman, Jordan');
       expect(provider.fullName, isEmpty);
-      expect(provider.isAccidentTypeSelected, isFalse);
+      expect(provider.isSessionReady, isFalse);
     });
 
-    test('setAccidentType updates value', () {
+    test('createSession and joinSession', () async {
       final provider = ReportProvider();
-      provider.setAccidentType('Minor Collision');
-      expect(provider.selectedAccidentType, 'Minor Collision');
-      expect(provider.isAccidentTypeSelected, isTrue);
+
+      await provider.createSession();
+      expect(provider.sessionId, 'ACC-12345');
+      expect(provider.isSessionReady, isTrue);
+
+      await provider.joinSession('CODE-123');
+      expect(provider.sessionId, 'CODE-123');
+      expect(provider.isSessionReady, isTrue);
     });
 
     test('addPhoto and removePhoto', () {
@@ -238,9 +227,9 @@ void main() {
       expect(provider.hasDriverDetails, isTrue);
     });
 
-    test('resetReport clears all data', () {
+    test('resetReport clears all data', () async {
       final provider = ReportProvider();
-      provider.setAccidentType('Minor Collision');
+      await provider.createSession();
       provider.addPhoto('photo1');
       provider.setDriverDetails(
         fullName: 'John',
@@ -252,10 +241,10 @@ void main() {
 
       provider.resetReport();
 
-      expect(provider.selectedAccidentType, isNull);
+      expect(provider.sessionId, isNull);
       expect(provider.capturedPhotos, isEmpty);
       expect(provider.fullName, isEmpty);
-      expect(provider.isAccidentTypeSelected, isFalse);
+      expect(provider.isSessionReady, isFalse);
     });
   });
 }

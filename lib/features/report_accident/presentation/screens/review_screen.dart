@@ -41,13 +41,13 @@ class ReviewScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: AppConstants.spacingLg),
 
-                        // Accident Type Section
+                        // Session Section
                         _buildSection(
-                          title: AppStrings.accidentType,
-                          icon: Icons.car_crash_rounded,
+                          title: 'Accident Session',
+                          icon: Icons.qr_code_rounded,
                           child: _buildInfoRow(
-                            'Type',
-                            provider.selectedAccidentType ?? 'Not selected',
+                            'Session ID',
+                            provider.sessionId ?? 'Not selected',
                           ),
                         ),
                         const SizedBox(height: AppConstants.spacingMd),
@@ -69,18 +69,33 @@ class ReviewScreen extends StatelessWidget {
                           icon: Icons.person_rounded,
                           child: Column(
                             children: [
-                              _buildInfoRow(AppStrings.fullName, provider.fullName),
+                              _buildInfoRow(
+                                AppStrings.fullName,
+                                provider.fullName,
+                              ),
                               const SizedBox(height: 8),
-                              _buildInfoRow(AppStrings.phoneNumber, provider.phoneNumber),
+                              _buildInfoRow(
+                                AppStrings.phoneNumber,
+                                provider.phoneNumber,
+                              ),
                               const SizedBox(height: 8),
-                              _buildInfoRow(AppStrings.vehiclePlateNumber, provider.vehiclePlateNumber),
+                              _buildInfoRow(
+                                AppStrings.vehiclePlateNumber,
+                                provider.vehiclePlateNumber,
+                              ),
                               if (provider.insuranceCompany.isNotEmpty) ...[
                                 const SizedBox(height: 8),
-                                _buildInfoRow(AppStrings.insuranceCompany, provider.insuranceCompany),
+                                _buildInfoRow(
+                                  AppStrings.insuranceCompany,
+                                  provider.insuranceCompany,
+                                ),
                               ],
                               if (provider.accidentDescription.isNotEmpty) ...[
                                 const SizedBox(height: 8),
-                                _buildInfoRow(AppStrings.accidentDescription, provider.accidentDescription),
+                                _buildInfoRow(
+                                  AppStrings.accidentDescription,
+                                  provider.accidentDescription,
+                                ),
                               ],
                             ],
                           ),
@@ -126,10 +141,11 @@ class ReviewScreen extends StatelessWidget {
                                               color: AppColors.accentLight,
                                               borderRadius:
                                                   BorderRadius.circular(
-                                                      AppConstants
-                                                          .borderRadiusSm),
+                                                    AppConstants.borderRadiusSm,
+                                                  ),
                                               border: Border.all(
-                                                  color: AppColors.accent),
+                                                color: AppColors.accent,
+                                              ),
                                             ),
                                             child: Column(
                                               mainAxisAlignment:

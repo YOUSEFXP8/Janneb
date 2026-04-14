@@ -54,7 +54,9 @@ class HomeScreen extends StatelessWidget {
                             Icon(
                               Icons.location_on_rounded,
                               size: 14,
-                              color: AppColors.textSecondary.withValues(alpha: 0.7),
+                              color: AppColors.textSecondary.withValues(
+                                alpha: 0.7,
+                              ),
                             ),
                             const SizedBox(width: 4),
                             const Text(
@@ -100,7 +102,9 @@ class HomeScreen extends StatelessWidget {
                       AppColors.primary.withValues(alpha: 0.85),
                     ],
                   ),
-                  borderRadius: BorderRadius.circular(AppConstants.borderRadiusLg),
+                  borderRadius: BorderRadius.circular(
+                    AppConstants.borderRadiusLg,
+                  ),
                   boxShadow: [
                     BoxShadow(
                       color: AppColors.primary.withValues(alpha: 0.3),
@@ -143,13 +147,14 @@ class HomeScreen extends StatelessWidget {
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton(
-                        onPressed: () => context.push('/report/accident-type'),
+                        onPressed: () => context.push('/report/qr-session'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: AppColors.primary,
                           shape: RoundedRectangleBorder(
-                            borderRadius:
-                                BorderRadius.circular(AppConstants.borderRadius),
+                            borderRadius: BorderRadius.circular(
+                              AppConstants.borderRadius,
+                            ),
                           ),
                           elevation: 0,
                         ),
@@ -198,7 +203,7 @@ class HomeScreen extends StatelessWidget {
                     icon: Icons.description_rounded,
                     iconColor: AppColors.primary,
                     onTap: () {
-                      // Placeholder
+                      context.push('/my-reports');
                     },
                   ),
                   ActionCard(
@@ -238,7 +243,9 @@ class HomeScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(vertical: 48),
                 decoration: BoxDecoration(
                   color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                  borderRadius: BorderRadius.circular(
+                    AppConstants.borderRadius,
+                  ),
                   border: Border.all(color: AppColors.border),
                 ),
                 child: Column(
@@ -260,10 +267,7 @@ class HomeScreen extends StatelessWidget {
                     const SizedBox(height: 4),
                     const Text(
                       'Your accident reports will appear here',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.textHint,
-                      ),
+                      style: TextStyle(fontSize: 13, color: AppColors.textHint),
                     ),
                   ],
                 ),

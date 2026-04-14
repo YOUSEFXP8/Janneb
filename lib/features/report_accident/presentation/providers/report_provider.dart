@@ -1,9 +1,48 @@
 import 'package:flutter/foundation.dart';
+import '../../data/models/accident_report.dart';
 
 class ReportProvider extends ChangeNotifier {
-  // Accident Type
-  String? _selectedAccidentType;
-  String? get selectedAccidentType => _selectedAccidentType;
+  // Mock Reports
+  final List<AccidentReport> _reports = [
+    AccidentReport(
+      accidentId: 4821,
+      latitude: 24.7136,
+      longitude: 46.6753,
+      status: 'UNDER_REVIEW',
+      date: DateTime(2026, 4, 13),
+    ),
+    AccidentReport(
+      accidentId: 4822,
+      latitude: 24.7136,
+      longitude: 46.6753,
+      status: 'COMPLETED',
+      date: DateTime(2026, 4, 10),
+      officerReportUrl: 'https://example.com/report_4822.pdf',
+    ),
+    AccidentReport(
+      accidentId: 4823,
+      latitude: 24.7136,
+      longitude: 46.6753,
+      status: 'REPORTED',
+      date: DateTime(2026, 4, 14),
+    ),
+  ];
+
+  List<AccidentReport> get reports => List.unmodifiable(_reports);
+
+  AccidentReport getReportById(int id) {
+    return _reports.firstWhere(
+      (report) => report.accidentId == id,
+      orElse: () => throw Exception('Report not found'),
+    );
+  }
+
+  // QR Session
+  String? _sessionId;
+  String? get sessionId => _sessionId;
+
+  bool _isLoading = false;
+  bool get isLoading => _isLoading;
 
   // Evidence / Photos
   final List<String> _capturedPhotos = [];
@@ -32,8 +71,18 @@ class ReportProvider extends ChangeNotifier {
   String get accidentDescription => _accidentDescription;
 
   // Methods
-  void setAccidentType(String type) {
-    _selectedAccidentType = type;
+  Future<void> createSession() async {
+    _isLoading = true;
+    notifyListeners();
+
+    await Future.delayed(const Duration(seconds: 1));
+    _sessionId = 'ACC-12345';
+    _isLoading = false;
+    notifyListeners();
+  }
+
+  Future<void> joinSession(String id) async {
+    _sessionId = id;
     notifyListeners();
   }
 
@@ -75,7 +124,8 @@ class ReportProvider extends ChangeNotifier {
   }
 
   void resetReport() {
-    _selectedAccidentType = null;
+    _sessionId = null;
+    _isLoading = false;
     _capturedPhotos.clear();
     _locationText = 'Amman, Jordan';
     _locationConfirmed = false;
@@ -87,7 +137,7 @@ class ReportProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool get isAccidentTypeSelected => _selectedAccidentType != null;
+  bool get isSessionReady => _sessionId != null;
   bool get hasPhotos => _capturedPhotos.isNotEmpty;
   bool get hasDriverDetails =>
       _fullName.isNotEmpty &&
