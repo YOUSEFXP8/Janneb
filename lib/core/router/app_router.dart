@@ -4,6 +4,7 @@ import '../../features/onboarding/presentation/screens/splash_screen.dart';
 import '../../features/onboarding/presentation/screens/onboarding_screen.dart';
 import '../../features/auth/presentation/screens/login_screen.dart';
 import '../../features/home/presentation/screens/home_screen.dart';
+import '../../features/home/presentation/screens/emergency_screen.dart';
 import '../../features/report_accident/presentation/screens/qr_session_screen.dart';
 import '../../features/report_accident/presentation/screens/qr_scanner_screen.dart';
 import '../../features/report_accident/presentation/screens/my_reports_screen.dart';
@@ -72,6 +73,12 @@ class AppRouter {
             return FadeTransition(opacity: animation, child: child);
           },
         ),
+      ),
+      GoRoute(
+        path: '/emergency',
+        name: 'emergency',
+        pageBuilder: (context, state) =>
+            _buildSlideTransition(state, const EmergencyScreen()),
       ),
       GoRoute(
         path: '/report/qr-session',

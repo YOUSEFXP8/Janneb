@@ -211,7 +211,7 @@ class HomeScreen extends StatelessWidget {
                     icon: Icons.phone_in_talk_rounded,
                     iconColor: AppColors.error,
                     onTap: () {
-                      // Placeholder
+                      context.push('/emergency');
                     },
                   ),
                   ActionCard(
