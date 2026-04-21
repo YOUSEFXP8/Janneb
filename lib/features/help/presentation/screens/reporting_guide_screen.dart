@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../report_accident/presentation/providers/report_provider.dart';
 import '../widgets/guide_step_item.dart';
 
 class _StepData {
@@ -57,18 +59,14 @@ const List<_StepData> _steps = [
   ),
 ];
 
-class ReportingGuideScreen extends StatefulWidget {
+class ReportingGuideScreen extends StatelessWidget {
   const ReportingGuideScreen({super.key});
 
   @override
-  State<ReportingGuideScreen> createState() => _ReportingGuideScreenState();
-}
-
-class _ReportingGuideScreenState extends State<ReportingGuideScreen> {
-  int _currentStep = 0;
-
-  @override
   Widget build(BuildContext context) {
+    final provider = context.watch<ReportProvider>();
+    final currentStep = provider.guideStep;
+
     return Scaffold(
       backgroundColor: AppColors.scaffoldBackground,
       appBar: AppBar(
@@ -114,7 +112,7 @@ class _ReportingGuideScreenState extends State<ReportingGuideScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             LinearProgressIndicator(
-              value: (_currentStep + 1) / 6,
+              value: currentStep / 6,
               backgroundColor: AppColors.border,
               color: AppColors.primary,
               minHeight: 3,
@@ -160,9 +158,9 @@ class _ReportingGuideScreenState extends State<ReportingGuideScreen> {
                 itemBuilder: (context, i) {
                   final step = _steps[i];
                   final StepStatus status;
-                  if (i < _currentStep) {
+                  if (i < currentStep) {
                     status = StepStatus.completed;
-                  } else if (i == _currentStep) {
+                  } else if (i == currentStep) {
                     status = StepStatus.active;
                   } else {
                     status = StepStatus.pending;
@@ -174,7 +172,7 @@ class _ReportingGuideScreenState extends State<ReportingGuideScreen> {
                     icon: step.icon,
                     status: status,
                     onTap: () {
-                      setState(() => _currentStep = i);
+                      context.read<ReportProvider>().setGuideStep(i);
                       context.push('/help/guide/${step.number}');
                     },
                   );

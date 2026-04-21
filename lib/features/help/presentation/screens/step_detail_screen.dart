@@ -241,37 +241,37 @@ class StepDetailScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: AppConstants.spacingLg),
-                    Center(
-                      child: Container(
-                        width: 64,
-                        height: 64,
-                        decoration: const BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        Container(
+                          width: 56,
+                          height: 56,
+                          decoration: const BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            detail.stepIcon,
+                            color: Colors.white,
+                            size: 28,
+                          ),
                         ),
-                        child: Icon(
-                          detail.stepIcon,
-                          color: Colors.white,
-                          size: 30,
+                        const SizedBox(width: AppConstants.spacingMd),
+                        Expanded(
+                          child: Text(
+                            detail.title,
+                            style: const TextStyle(
+                              fontSize: 20,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textPrimary,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(height: AppConstants.spacingMd),
-                    Center(
-                      child: Text(
-                        detail.title,
-                        style: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.textPrimary,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
+                      ],
                     ),
                     const SizedBox(height: AppConstants.spacingSm),
-                    Center(
-                      child: _buildDescription(detail),
-                    ),
+                    _buildDescription(detail),
                     const SizedBox(height: AppConstants.spacingLg),
                     Text(
                       detail.sectionLabel,
@@ -315,7 +315,6 @@ class StepDetailScreen extends StatelessWidget {
     if (idx == -1) {
       return Text(
         text,
-        textAlign: TextAlign.center,
         style: const TextStyle(
           fontSize: 14,
           color: AppColors.textSecondary,
@@ -325,7 +324,6 @@ class StepDetailScreen extends StatelessWidget {
     }
 
     return RichText(
-      textAlign: TextAlign.center,
       text: TextSpan(
         style: const TextStyle(
           fontSize: 14,

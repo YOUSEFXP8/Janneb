@@ -205,26 +205,24 @@ class _HelpScreenState extends State<HelpScreen> {
                       const SizedBox(height: AppConstants.spacingMd),
                       Row(
                         children: [
-                          OutlinedButton(
+                          ElevatedButton(
                             onPressed: () => context.push('/help/guide'),
-                            style: OutlinedButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              side: const BorderSide(
-                                color: Colors.white,
-                                width: 1.5,
-                              ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: AppColors.primary,
                               minimumSize: const Size(0, 36),
                               padding: const EdgeInsets.symmetric(
                                 horizontal: AppConstants.spacingMd,
                               ),
+                              elevation: 0,
                               shape: RoundedRectangleBorder(
                                 borderRadius: BorderRadius.circular(
-                                  AppConstants.borderRadiusSm,
+                                  AppConstants.borderRadiusXl,
                                 ),
                               ),
                             ),
                             child: const Text(
-                              'Start guide  >',
+                              'Start guide  →',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,

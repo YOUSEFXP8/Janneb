@@ -3,8 +3,15 @@ import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 
-class FaqScreen extends StatelessWidget {
+class FaqScreen extends StatefulWidget {
   const FaqScreen({super.key});
+
+  @override
+  State<FaqScreen> createState() => _FaqScreenState();
+}
+
+class _FaqScreenState extends State<FaqScreen> {
+  String _selectedFilter = 'all';
 
   static const List<Map<String, String>> _generalFaqs = [
     {
@@ -52,6 +59,17 @@ class FaqScreen extends StatelessWidget {
     },
   ];
 
+  List<Map<String, String>> get _displayedFaqs {
+    switch (_selectedFilter) {
+      case 'general':
+        return _generalFaqs;
+      case 'reporting':
+        return _reportingFaqs;
+      default:
+        return [..._generalFaqs, ..._reportingFaqs];
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -77,46 +95,103 @@ class FaqScreen extends StatelessWidget {
         ),
       ),
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppConstants.paddingScreen),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _SectionLabel(label: 'GENERAL'),
-              const SizedBox(height: AppConstants.spacingMd),
-              ..._generalFaqs.map((faq) => _FaqTile(
-                    question: faq['q']!,
-                    answer: faq['a']!,
-                  )),
-              const SizedBox(height: AppConstants.spacingLg),
-              _SectionLabel(label: 'REPORTING'),
-              const SizedBox(height: AppConstants.spacingMd),
-              ..._reportingFaqs.map((faq) => _FaqTile(
-                    question: faq['q']!,
-                    answer: faq['a']!,
-                  )),
-              const SizedBox(height: AppConstants.spacingXl),
-            ],
-          ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Filter pills
+            Padding(
+              padding: const EdgeInsets.fromLTRB(
+                AppConstants.paddingScreen,
+                AppConstants.spacingMd,
+                AppConstants.paddingScreen,
+                0,
+              ),
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: Row(
+                  children: [
+                    _FilterPill(
+                      label: 'All',
+                      isActive: _selectedFilter == 'all',
+                      onTap: () => setState(() => _selectedFilter = 'all'),
+                    ),
+                    const SizedBox(width: AppConstants.spacingSm),
+                    _FilterPill(
+                      label: 'General',
+                      isActive: _selectedFilter == 'general',
+                      onTap: () => setState(() => _selectedFilter = 'general'),
+                    ),
+                    const SizedBox(width: AppConstants.spacingSm),
+                    _FilterPill(
+                      label: 'Reporting',
+                      isActive: _selectedFilter == 'reporting',
+                      onTap: () =>
+                          setState(() => _selectedFilter = 'reporting'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: AppConstants.spacingMd),
+            // FAQ list
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(
+                  AppConstants.paddingScreen,
+                  0,
+                  AppConstants.paddingScreen,
+                  AppConstants.spacingXl,
+                ),
+                children: _displayedFaqs
+                    .map((faq) => _FaqTile(
+                          question: faq['q']!,
+                          answer: faq['a']!,
+                        ))
+                    .toList(),
+              ),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel({required this.label});
+class _FilterPill extends StatelessWidget {
+  const _FilterPill({
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+  });
+
   final String label;
+  final bool isActive;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      label,
-      style: const TextStyle(
-        fontSize: 11,
-        fontWeight: FontWeight.w600,
-        color: AppColors.textSecondary,
-        letterSpacing: 1.5,
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: AppConstants.animationFast,
+        height: 32,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        decoration: BoxDecoration(
+          color: isActive ? AppColors.primary : AppColors.background,
+          borderRadius: BorderRadius.circular(99),
+          border: isActive
+              ? null
+              : Border.all(color: AppColors.border, width: 1),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w500,
+            color: isActive ? Colors.white : AppColors.textSecondary,
+          ),
+        ),
       ),
     );
   }

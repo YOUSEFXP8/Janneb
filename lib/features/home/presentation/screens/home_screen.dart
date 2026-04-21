@@ -94,24 +94,10 @@ class HomeScreen extends StatelessWidget {
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [
-                      AppColors.primary,
-                      AppColors.primary.withValues(alpha: 0.85),
-                    ],
-                  ),
+                  color: AppColors.primary,
                   borderRadius: BorderRadius.circular(
                     AppConstants.borderRadiusLg,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppColors.primary.withValues(alpha: 0.3),
-                      blurRadius: 12,
-                      offset: const Offset(0, 4),
-                    ),
-                  ],
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -193,10 +179,10 @@ class HomeScreen extends StatelessWidget {
               GridView.count(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
-                crossAxisCount: 3,
+                crossAxisCount: 2,
                 crossAxisSpacing: 12,
                 mainAxisSpacing: 12,
-                childAspectRatio: 0.95,
+                childAspectRatio: 1.3,
                 children: [
                   ActionCard(
                     title: AppStrings.myReports,
@@ -221,6 +207,12 @@ class HomeScreen extends StatelessWidget {
                     onTap: () {
                       context.push('/help');
                     },
+                  ),
+                  ActionCard(
+                    title: 'Insurance',
+                    icon: Icons.shield_rounded,
+                    iconColor: AppColors.primary,
+                    onTap: () => context.push('/help/topic/after-submission'),
                   ),
                 ],
               ),

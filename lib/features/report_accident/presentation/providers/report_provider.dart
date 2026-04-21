@@ -30,6 +30,14 @@ class ReportProvider extends ChangeNotifier {
 
   List<AccidentReport> get reports => List.unmodifiable(_reports);
 
+  // Guide Step tracking
+  int _guideStep = 0;
+  int get guideStep => _guideStep;
+  void setGuideStep(int step) {
+    _guideStep = step;
+    notifyListeners();
+  }
+
   AccidentReport getReportById(int id) {
     return _reports.firstWhere(
       (report) => report.accidentId == id,

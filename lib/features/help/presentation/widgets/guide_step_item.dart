@@ -55,11 +55,9 @@ class GuideStepItem extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 13,
-                      color: status == StepStatus.active
-                          ? AppColors.warning
-                          : AppColors.textSecondary,
+                      color: AppColors.textSecondary,
                     ),
                   ),
                 ],

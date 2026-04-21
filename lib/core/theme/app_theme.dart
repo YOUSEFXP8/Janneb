@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'app_colors.dart';
+import '../constants/app_constants.dart';
 
 class AppTheme {
   AppTheme._();
@@ -9,7 +10,7 @@ class AppTheme {
       useMaterial3: true,
       brightness: Brightness.light,
       primaryColor: AppColors.primary,
-      scaffoldBackgroundColor: AppColors.background,
+      scaffoldBackgroundColor: AppColors.scaffoldBackground,
       colorScheme: const ColorScheme.light(
         primary: AppColors.primary,
         secondary: AppColors.accent,
@@ -113,10 +114,11 @@ class AppTheme {
       ),
       cardTheme: CardThemeData(
         color: AppColors.background,
-        elevation: 2,
-        shadowColor: AppColors.shadow,
+        elevation: 0,
+        shadowColor: Colors.transparent,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+          side: const BorderSide(color: AppColors.border, width: 1),
         ),
         margin: const EdgeInsets.symmetric(vertical: 6),
       ),
