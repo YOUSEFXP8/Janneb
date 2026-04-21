@@ -14,6 +14,11 @@ import '../../features/report_accident/presentation/screens/location_screen.dart
 import '../../features/report_accident/presentation/screens/driver_details_screen.dart';
 import '../../features/report_accident/presentation/screens/review_screen.dart';
 import '../../features/report_accident/presentation/screens/success_screen.dart';
+import '../../features/help/presentation/screens/help_screen.dart';
+import '../../features/help/presentation/screens/reporting_guide_screen.dart';
+import '../../features/help/presentation/screens/step_detail_screen.dart';
+import '../../features/help/presentation/screens/faq_screen.dart';
+import '../../features/help/presentation/screens/topic_detail_screen.dart';
 
 class AppRouter {
   AppRouter._();
@@ -132,6 +137,54 @@ class AppRouter {
         name: 'review',
         pageBuilder: (context, state) =>
             _buildSlideTransition(state, const ReviewScreen()),
+      ),
+      GoRoute(
+        path: '/help',
+        name: 'help',
+        pageBuilder: (context, state) => CustomTransitionPage(
+          key: state.pageKey,
+          child: const HelpScreen(),
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
+        ),
+      ),
+      GoRoute(
+        path: '/help/guide',
+        name: 'help-guide',
+        pageBuilder: (context, state) =>
+            _buildSlideTransition(state, const ReportingGuideScreen()),
+      ),
+      GoRoute(
+        path: '/help/guide/:stepId',
+        name: 'help-guide-step',
+        pageBuilder: (context, state) {
+          final stepId =
+              (int.tryParse(state.pathParameters['stepId'] ?? '') ?? 2)
+                  .clamp(1, 6)
+                  .toInt();
+          return _buildSlideTransition(
+            state,
+            StepDetailScreen(stepId: stepId),
+          );
+        },
+      ),
+      GoRoute(
+        path: '/help/faq',
+        name: 'help-faq',
+        pageBuilder: (context, state) =>
+            _buildSlideTransition(state, const FaqScreen()),
+      ),
+      GoRoute(
+        path: '/help/topic/:topicId',
+        name: 'help-topic',
+        pageBuilder: (context, state) {
+          final topicId = state.pathParameters['topicId'] ?? '';
+          return _buildSlideTransition(
+            state,
+            TopicDetailScreen(topicId: topicId),
+          );
+        },
       ),
       GoRoute(
         path: '/report/success',

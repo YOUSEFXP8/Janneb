@@ -219,7 +219,7 @@ class HomeScreen extends StatelessWidget {
                     icon: Icons.help_outline_rounded,
                     iconColor: AppColors.warning,
                     onTap: () {
-                      // Placeholder
+                      context.push('/help');
                     },
                   ),
                 ],
