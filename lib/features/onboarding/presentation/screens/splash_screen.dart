@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -33,11 +35,22 @@ class _SplashScreenState extends State<SplashScreen>
     ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOutBack));
     _controller.forward();
 
-    Future.delayed(const Duration(seconds: 3), () {
-      if (mounted) {
+    _navigateToNextScreen();
+  }
+
+  Future<void> _navigateToNextScreen() async {
+    await Future.delayed(const Duration(seconds: 2));
+    if (mounted) {
+      final auth = context.read<AuthProvider>();
+      if (auth.isAuthenticated) {
+        await auth.fetchProfile();
+        if (mounted) {
+          context.go('/home');
+        }
+      } else {
         context.go('/onboarding');
       }
-    });
+    }
   }
 
   @override
@@ -66,7 +79,6 @@ class _SplashScreenState extends State<SplashScreen>
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Logo
                 Container(
                   width: 120,
                   height: 120,
@@ -88,7 +100,6 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                 ),
                 const SizedBox(height: 32),
-                // App Name
                 const Text(
                   AppStrings.appName,
                   style: TextStyle(
@@ -99,7 +110,6 @@ class _SplashScreenState extends State<SplashScreen>
                   ),
                 ),
                 const SizedBox(height: 12),
-                // Tagline
                 Text(
                   AppStrings.appTagline,
                   style: TextStyle(
@@ -110,7 +120,6 @@ class _SplashScreenState extends State<SplashScreen>
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 60),
-                // Loading indicator
                 SizedBox(
                   width: 32,
                   height: 32,

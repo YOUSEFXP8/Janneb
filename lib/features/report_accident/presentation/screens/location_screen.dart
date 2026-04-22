@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
@@ -8,8 +9,56 @@ import '../../../../common/widgets/primary_button.dart';
 import '../../../../common/widgets/secondary_button.dart';
 import '../providers/report_provider.dart';
 
-class LocationScreen extends StatelessWidget {
+class LocationScreen extends StatefulWidget {
   const LocationScreen({super.key});
+
+  @override
+  State<LocationScreen> createState() => _LocationScreenState();
+}
+
+class _LocationScreenState extends State<LocationScreen> {
+  bool _isLoading = false;
+
+  @override
+  void initState() {
+    super.initState();
+    // Auto-fetch GPS when the screen opens
+    WidgetsBinding.instance.addPostFrameCallback((_) => _getCurrentLocation());
+  }
+
+  Future<void> _getCurrentLocation() async {
+    setState(() => _isLoading = true);
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Location permission required')),
+          );
+        }
+        return;
+      }
+      final position = await Geolocator.getCurrentPosition();
+      if (mounted) {
+        context.read<ReportProvider>().setGpsCoordinates(
+              position.latitude,
+              position.longitude,
+            );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Failed to get location')),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,8 +94,9 @@ class LocationScreen extends StatelessWidget {
                       height: 300,
                       decoration: BoxDecoration(
                         color: AppColors.surface,
-                        borderRadius:
-                            BorderRadius.circular(AppConstants.borderRadiusLg),
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.borderRadiusLg,
+                        ),
                         border: Border.all(
                           color: AppColors.border,
                           width: 2,
@@ -56,12 +106,10 @@ class LocationScreen extends StatelessWidget {
                       child: Stack(
                         alignment: Alignment.center,
                         children: [
-                          // Grid pattern to sim map
                           CustomPaint(
                             size: const Size(double.infinity, 300),
                             painter: _MapGridPainter(),
                           ),
-                          // Center pin
                           Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -69,7 +117,9 @@ class LocationScreen extends StatelessWidget {
                                 width: 56,
                                 height: 56,
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary.withValues(alpha: 0.15),
+                                  color: AppColors.primary.withValues(
+                                    alpha: 0.15,
+                                  ),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
@@ -89,7 +139,9 @@ class LocationScreen extends StatelessWidget {
                                   borderRadius: BorderRadius.circular(20),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: AppColors.shadow.withValues(alpha: 0.1),
+                                      color: AppColors.shadow.withValues(
+                                        alpha: 0.1,
+                                      ),
                                       blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     ),
@@ -111,14 +163,15 @@ class LocationScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: AppConstants.spacingLg),
 
-                    // Location Info
+                    // Location Info Card
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(AppConstants.paddingCard),
                       decoration: BoxDecoration(
                         color: AppColors.accentLight,
-                        borderRadius:
-                            BorderRadius.circular(AppConstants.borderRadius),
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.borderRadius,
+                        ),
                         border: Border.all(color: AppColors.accent),
                       ),
                       child: Row(
@@ -139,6 +192,8 @@ class LocationScreen extends StatelessWidget {
                           const SizedBox(width: 12),
                           Consumer<ReportProvider>(
                             builder: (context, provider, _) {
+                              final lat = provider.latitude;
+                              final lng = provider.longitude;
                               return Expanded(
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -152,14 +207,32 @@ class LocationScreen extends StatelessWidget {
                                       ),
                                     ),
                                     const SizedBox(height: 2),
-                                    Text(
-                                      provider.locationText,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                        color: AppColors.textPrimary,
+                                    if (lat != null) ...[
+                                      Text(
+                                        'Lat: ${lat.toStringAsFixed(6)}',
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.textPrimary,
+                                        ),
                                       ),
-                                    ),
+                                      Text(
+                                        'Lng: ${lng!.toStringAsFixed(6)}',
+                                        style: const TextStyle(
+                                          fontSize: 15,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ),
+                                    ] else
+                                      Text(
+                                        provider.locationText,
+                                        style: const TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                          color: AppColors.textPrimary,
+                                        ),
+                                      ),
                                   ],
                                 ),
                               );
@@ -178,13 +251,39 @@ class LocationScreen extends StatelessWidget {
               padding: const EdgeInsets.all(AppConstants.paddingScreen),
               child: Column(
                 children: [
+                  if (_isLoading)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 12),
+                      child: Center(child: CircularProgressIndicator()),
+                    )
+                  else
+                    Consumer<ReportProvider>(
+                      builder: (context, provider, _) => provider.latitude != null
+                          ? OutlinedButton.icon(
+                              onPressed: _getCurrentLocation,
+                              icon: const Icon(Icons.refresh_rounded, size: 18),
+                              label: const Text('Refresh Location'),
+                              style: OutlinedButton.styleFrom(
+                                minimumSize: const Size(double.infinity, 48),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(
+                                    AppConstants.borderRadius,
+                                  ),
+                                ),
+                              ),
+                            )
+                          : PrimaryButton(
+                              text: 'Get Current Location',
+                              icon: Icons.my_location_rounded,
+                              onPressed: _getCurrentLocation,
+                            ),
+                    ),
+                  const SizedBox(height: AppConstants.spacingSm + 4),
                   PrimaryButton(
                     text: AppStrings.confirmLocation,
                     icon: Icons.check_circle_outline_rounded,
                     onPressed: () {
-                      context
-                          .read<ReportProvider>()
-                          .confirmLocation();
+                      context.read<ReportProvider>().confirmLocation();
                       context.push('/report/driver-details');
                     },
                   ),
@@ -192,9 +291,7 @@ class LocationScreen extends StatelessWidget {
                   SecondaryButton(
                     text: AppStrings.adjustLocation,
                     icon: Icons.edit_location_alt_rounded,
-                    onPressed: () {
-                      // Placeholder - no maps integration
-                    },
+                    onPressed: () {},
                   ),
                 ],
               ),
@@ -213,11 +310,9 @@ class _MapGridPainter extends CustomPainter {
       ..color = AppColors.border.withValues(alpha: 0.5)
       ..strokeWidth = 0.5;
 
-    // Horizontal lines
     for (double y = 0; y < size.height; y += 30) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), paint);
     }
-    // Vertical lines
     for (double x = 0; x < size.width; x += 30) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), paint);
     }

@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/foundation.dart';
 import '../../data/models/accident_report.dart';
 
@@ -52,9 +53,9 @@ class ReportProvider extends ChangeNotifier {
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
-  // Evidence / Photos
-  final List<String> _capturedPhotos = [];
-  List<String> get capturedPhotos => List.unmodifiable(_capturedPhotos);
+  // Evidence / Photos (real File objects)
+  final List<File> _images = [];
+  List<File> get images => List.unmodifiable(_images);
 
   // Location
   String _locationText = 'Amman, Jordan';
@@ -62,7 +63,21 @@ class ReportProvider extends ChangeNotifier {
   bool _locationConfirmed = false;
   bool get locationConfirmed => _locationConfirmed;
 
-  // Driver Details
+  // GPS Coordinates
+  double? _latitude;
+  double? _longitude;
+  double? get latitude => _latitude;
+  double? get longitude => _longitude;
+
+  // Selected Car (from user's registered vehicles)
+  Map<String, dynamic>? _selectedCar;
+  Map<String, dynamic>? get selectedCar => _selectedCar;
+  void selectCar(Map<String, dynamic>? car) {
+    _selectedCar = car;
+    notifyListeners();
+  }
+
+  // Driver / Reporter Details
   String _fullName = '';
   String get fullName => _fullName;
 
@@ -77,6 +92,16 @@ class ReportProvider extends ChangeNotifier {
 
   String _accidentDescription = '';
   String get accidentDescription => _accidentDescription;
+
+  // Accident-specific details
+  String _accidentType = '';
+  String get accidentType => _accidentType;
+
+  String _weatherCondition = '';
+  String get weatherCondition => _weatherCondition;
+
+  bool _injuriesReported = false;
+  bool get injuriesReported => _injuriesReported;
 
   // Methods
   Future<void> createSession() async {
@@ -94,20 +119,31 @@ class ReportProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  void addPhoto(String photoPath) {
-    _capturedPhotos.add(photoPath);
+  void resetSession() {
+    _sessionId = null;
     notifyListeners();
   }
 
-  void removePhoto(int index) {
-    if (index >= 0 && index < _capturedPhotos.length) {
-      _capturedPhotos.removeAt(index);
+  void addImage(File image) {
+    _images.add(image);
+    notifyListeners();
+  }
+
+  void removeImage(int index) {
+    if (index >= 0 && index < _images.length) {
+      _images.removeAt(index);
       notifyListeners();
     }
   }
 
   void setLocation(String location) {
     _locationText = location;
+    notifyListeners();
+  }
+
+  void setGpsCoordinates(double lat, double lng) {
+    _latitude = lat;
+    _longitude = lng;
     notifyListeners();
   }
 
@@ -122,31 +158,43 @@ class ReportProvider extends ChangeNotifier {
     required String vehiclePlateNumber,
     required String insuranceCompany,
     required String accidentDescription,
+    required String accidentType,
+    required String weatherCondition,
+    required bool injuriesReported,
   }) {
     _fullName = fullName;
     _phoneNumber = phoneNumber;
     _vehiclePlateNumber = vehiclePlateNumber;
     _insuranceCompany = insuranceCompany;
     _accidentDescription = accidentDescription;
+    _accidentType = accidentType;
+    _weatherCondition = weatherCondition;
+    _injuriesReported = injuriesReported;
     notifyListeners();
   }
 
   void resetReport() {
     _sessionId = null;
     _isLoading = false;
-    _capturedPhotos.clear();
+    _images.clear();
     _locationText = 'Amman, Jordan';
     _locationConfirmed = false;
+    _latitude = null;
+    _longitude = null;
+    _selectedCar = null;
     _fullName = '';
     _phoneNumber = '';
     _vehiclePlateNumber = '';
     _insuranceCompany = '';
     _accidentDescription = '';
+    _accidentType = '';
+    _weatherCondition = '';
+    _injuriesReported = false;
     notifyListeners();
   }
 
   bool get isSessionReady => _sessionId != null;
-  bool get hasPhotos => _capturedPhotos.isNotEmpty;
+  bool get hasPhotos => _images.isNotEmpty;
   bool get hasDriverDetails =>
       _fullName.isNotEmpty &&
       _phoneNumber.isNotEmpty &&

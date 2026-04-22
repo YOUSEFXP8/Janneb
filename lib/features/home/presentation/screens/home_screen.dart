@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
+import '../../../notifications/presentation/providers/notification_provider.dart';
+import '../../../notifications/presentation/widgets/notification_menu.dart';
 import '../widgets/action_card.dart';
 
 class HomeScreen extends StatelessWidget {
@@ -10,6 +14,9 @@ class HomeScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final auth = context.watch<AuthProvider>();
+    final unreadCount = context.watch<NotificationProvider>().unreadCount;
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -29,10 +36,13 @@ class HomeScreen extends StatelessWidget {
                       color: AppColors.accentLight,
                       borderRadius: BorderRadius.circular(16),
                     ),
-                    child: const Icon(
-                      Icons.person_rounded,
-                      size: 28,
-                      color: AppColors.primary,
+                    child: IconButton(
+                      
+                      icon: Icon(Icons.person_rounded,size: 28,
+                      color: AppColors.primary,),
+                        onPressed: (){
+                          context.push('/profile');
+                        },
                     ),
                   ),
                   const SizedBox(width: AppConstants.spacingMd),
@@ -41,7 +51,7 @@ class HomeScreen extends StatelessWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${AppStrings.hello}, ${AppStrings.userName}! 👋',
+                          '${AppStrings.hello}, ${auth.displayName}! 👋',
                           style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -71,18 +81,48 @@ class HomeScreen extends StatelessWidget {
                       ],
                     ),
                   ),
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: AppColors.surface,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: AppColors.border),
-                    ),
-                    child: const Icon(
-                      Icons.notifications_outlined,
-                      color: AppColors.textSecondary,
-                      size: 22,
+                  GestureDetector(
+                    onTap: () => showNotificationMenu(context),
+                    child: Stack(
+                      clipBehavior: Clip.none,
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: AppColors.surface,
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(color: AppColors.border),
+                          ),
+                          child: const Icon(
+                            Icons.notifications_outlined,
+                            color: AppColors.textSecondary,
+                            size: 22,
+                          ),
+                        ),
+                        if (unreadCount > 0)
+                          Positioned(
+                            top: -4,
+                            right: -4,
+                            child: Container(
+                              width: 18,
+                              height: 18,
+                              decoration: const BoxDecoration(
+                                color: AppColors.error,
+                                shape: BoxShape.circle,
+                              ),
+                              alignment: Alignment.center,
+                              child: Text(
+                                unreadCount > 9 ? '9+' : '$unreadCount',
+                                style: const TextStyle(
+                                  fontSize: 10,
+                                  fontWeight: FontWeight.w700,
+                                  color: Colors.white,
+                                ),
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                 ],
@@ -212,7 +252,7 @@ class HomeScreen extends StatelessWidget {
                     title: 'Insurance',
                     icon: Icons.shield_rounded,
                     iconColor: AppColors.primary,
-                    onTap: () => context.push('/help/topic/after-submission'),
+                    onTap: () => context.push('/insurance'),
                   ),
                 ],
               ),

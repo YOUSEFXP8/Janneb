@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:crashassist/common/widgets/primary_button.dart';
@@ -183,7 +184,7 @@ void main() {
     test('initial state', () {
       final provider = ReportProvider();
       expect(provider.sessionId, isNull);
-      expect(provider.capturedPhotos, isEmpty);
+      expect(provider.images, isEmpty);
       expect(provider.locationText, 'Amman, Jordan');
       expect(provider.fullName, isEmpty);
       expect(provider.isSessionReady, isFalse);
@@ -201,15 +202,15 @@ void main() {
       expect(provider.isSessionReady, isTrue);
     });
 
-    test('addPhoto and removePhoto', () {
+    test('addImage and removeImage', () {
       final provider = ReportProvider();
-      provider.addPhoto('photo1');
-      provider.addPhoto('photo2');
-      expect(provider.capturedPhotos.length, 2);
+      provider.addImage(File('photo1.jpg'));
+      provider.addImage(File('photo2.jpg'));
+      expect(provider.images.length, 2);
       expect(provider.hasPhotos, isTrue);
 
-      provider.removePhoto(0);
-      expect(provider.capturedPhotos.length, 1);
+      provider.removeImage(0);
+      expect(provider.images.length, 1);
     });
 
     test('setDriverDetails stores data', () {
@@ -220,6 +221,9 @@ void main() {
         vehiclePlateNumber: 'ABC123',
         insuranceCompany: 'Test Insurance',
         accidentDescription: 'Minor fender bender',
+        accidentType: 'Collision',
+        weatherCondition: 'Clear',
+        injuriesReported: false,
       );
       expect(provider.fullName, 'John Doe');
       expect(provider.phoneNumber, '+962700000000');
@@ -230,19 +234,22 @@ void main() {
     test('resetReport clears all data', () async {
       final provider = ReportProvider();
       await provider.createSession();
-      provider.addPhoto('photo1');
+      provider.addImage(File('photo1.jpg'));
       provider.setDriverDetails(
         fullName: 'John',
         phoneNumber: '123',
         vehiclePlateNumber: 'ABC',
         insuranceCompany: 'Ins',
         accidentDescription: 'Desc',
+        accidentType: 'Collision',
+        weatherCondition: 'Clear',
+        injuriesReported: false,
       );
 
       provider.resetReport();
 
       expect(provider.sessionId, isNull);
-      expect(provider.capturedPhotos, isEmpty);
+      expect(provider.images, isEmpty);
       expect(provider.fullName, isEmpty);
       expect(provider.isSessionReady, isFalse);
     });

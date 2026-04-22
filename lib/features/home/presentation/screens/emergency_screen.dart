@@ -1,15 +1,24 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../common/widgets/emergency_button.dart';
 
 class EmergencyScreen extends StatelessWidget {
   const EmergencyScreen({super.key});
 
-  void _showSnackBar(BuildContext context, String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
+  Future<void> _callNumber(BuildContext context, String phoneNumber) async {
+    final messenger = ScaffoldMessenger.of(context);
+    final uri = Uri(scheme: 'tel', path: phoneNumber);
+
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+      return;
+    }
+
+    messenger.showSnackBar(
+      SnackBar(content: Text('Could not open phone app for $phoneNumber')),
+    );
   }
 
   @override
@@ -82,7 +91,7 @@ class EmergencyScreen extends StatelessWidget {
                 subtitle: '911',
                 icon: Icons.phone_in_talk_rounded,
                 color: AppColors.error,
-                onTap: () => _showSnackBar(context, 'Calling Police...'),
+                onTap: () => _callNumber(context, '911'),
               ),
               const SizedBox(height: 16),
               EmergencyButton(
@@ -90,15 +99,15 @@ class EmergencyScreen extends StatelessWidget {
                 subtitle: '997',
                 icon: Icons.medical_services_outlined,
                 color: AppColors.error,
-                onTap: () => _showSnackBar(context, 'Calling Ambulance...'),
+                onTap: () => _callNumber(context, '997'),
               ),
               const SizedBox(height: 16),
               EmergencyButton(
                 title: 'Call Insurance',
-                subtitle: 'Tawuniya Insurance',
+                subtitle: '920019990',
                 icon: Icons.shield_outlined,
                 color: AppColors.primary,
-                onTap: () => _showSnackBar(context, 'Calling Insurance...'),
+                onTap: () => _callNumber(context, '920019990'),
               ),
             ],
           ),

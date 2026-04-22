@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/constants/app_strings.dart';
 import '../../../../core/utils/validators.dart';
 import '../../../../common/widgets/primary_button.dart';
 import '../../../../common/widgets/custom_text_field.dart';
+import '../providers/auth_provider.dart';
+import '../../data/services/biometric_service.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -16,33 +18,76 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _phoneController = TextEditingController();
+  final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _biometricService = BiometricService();
   bool _obscurePassword = true;
-  bool _isLoading = false;
+  bool _canUseBiometrics = false;
 
   @override
-  void dispose() {
-    _phoneController.dispose();
-    _passwordController.dispose();
-    super.dispose();
+  void initState() {
+    super.initState();
+    _checkBiometrics();
   }
 
-  void _login() {
-    if (_formKey.currentState!.validate()) {
-      setState(() => _isLoading = true);
-      // Simulate login delay
-      Future.delayed(const Duration(seconds: 1), () {
-        if (mounted) {
-          setState(() => _isLoading = false);
-          context.go('/home');
-        }
+  Future<void> _checkBiometrics() async {
+    final isEnabled = await _biometricService.isBiometricEnabled();
+    final isAvailable = await _biometricService.isAvailable();
+    final credentials = await _biometricService.getCredentials();
+    if (mounted) {
+      setState(() {
+        _canUseBiometrics = isEnabled && isAvailable && credentials != null;
       });
     }
   }
 
   @override
+  void dispose() {
+    _emailController.dispose();
+    _passwordController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _login() async {
+    if (!_formKey.currentState!.validate()) return;
+    final auth = context.read<AuthProvider>();
+    final success = await auth.signIn(
+      _emailController.text.trim(),
+      _passwordController.text,
+    );
+    if (!mounted) return;
+    if (!success && auth.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(auth.error!), backgroundColor: AppColors.error),
+      );
+    }
+    // GoRouter redirect handles navigation on success
+  }
+
+  Future<void> _biometricLogin() async {
+    final authenticated = await _biometricService.authenticate();
+    if (!mounted || !authenticated) return;
+
+    final credentials = await _biometricService.getCredentials();
+    if (credentials == null) return;
+
+    final auth = context.read<AuthProvider>();
+    final success = await auth.signIn(
+      credentials['email']!,
+      credentials['password']!,
+    );
+    if (!mounted) return;
+    if (!success && auth.error != null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(auth.error!), backgroundColor: AppColors.error),
+      );
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
+    final isLoading = context.select<AuthProvider, bool>((a) => a.isLoading);
+
     return Scaffold(
       body: SafeArea(
         child: SingleChildScrollView(
@@ -53,7 +98,6 @@ class _LoginScreenState extends State<LoginScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: AppConstants.spacingXl),
-                // Header
                 Center(
                   child: Container(
                     width: 80,
@@ -72,7 +116,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: AppConstants.spacingLg),
                 const Center(
                   child: Text(
-                    AppStrings.welcomeBack,
+                    'Welcome Back',
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
@@ -83,7 +127,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 const SizedBox(height: AppConstants.spacingSm),
                 const Center(
                   child: Text(
-                    AppStrings.loginSubtitle,
+                    'Sign in to your account',
                     style: TextStyle(
                       fontSize: 16,
                       color: AppColors.textSecondary,
@@ -91,22 +135,18 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: AppConstants.spacingXl + 8),
-
-                // Phone Number
                 CustomTextField(
-                  label: AppStrings.phoneNumber,
-                  hint: '+962 7XX XXX XXX',
-                  controller: _phoneController,
-                  keyboardType: TextInputType.phone,
-                  prefixIcon: Icons.phone_rounded,
-                  validator: Validators.phone,
+                  label: 'Email',
+                  hint: 'Enter your email',
+                  controller: _emailController,
+                  keyboardType: TextInputType.emailAddress,
+                  prefixIcon: Icons.email_rounded,
+                  validator: (v) => Validators.required(v, 'Email'),
                   textInputAction: TextInputAction.next,
                 ),
                 const SizedBox(height: AppConstants.spacingMd),
-
-                // Password
                 CustomTextField(
-                  label: AppStrings.password,
+                  label: 'Password',
                   hint: 'Enter your password',
                   controller: _passwordController,
                   obscureText: _obscurePassword,
@@ -121,57 +161,45 @@ class _LoginScreenState extends State<LoginScreen> {
                       color: AppColors.textHint,
                       size: 20,
                     ),
-                    onPressed: () {
-                      setState(() => _obscurePassword = !_obscurePassword);
-                    },
-                  ),
-                ),
-                const SizedBox(height: AppConstants.spacingSm),
-
-                // Forgot Password
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () {
-                      // Placeholder - no backend
-                    },
-                    child: const Text(
-                      AppStrings.forgotPassword,
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
+                    onPressed: () =>
+                        setState(() => _obscurePassword = !_obscurePassword),
                   ),
                 ),
                 const SizedBox(height: AppConstants.spacingLg),
-
-                // Login Button
                 PrimaryButton(
-                  text: AppStrings.login,
-                  onPressed: _login,
-                  isLoading: _isLoading,
+                  text: 'Login',
+                  onPressed: isLoading ? null : _login,
+                  isLoading: isLoading,
                 ),
+                if (_canUseBiometrics) ...[
+                  const SizedBox(height: AppConstants.spacingMd),
+                  Center(
+                    child: IconButton(
+                      icon: const Icon(
+                        Icons.fingerprint_rounded,
+                        size: 40,
+                        color: AppColors.primary,
+                      ),
+                      onPressed: isLoading ? null : _biometricLogin,
+                    ),
+                  ),
+                ],
                 const SizedBox(height: AppConstants.spacingMd),
-
-                // Register
                 Center(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       const Text(
-                        AppStrings.dontHaveAccount,
+                        "Don't have an account? ",
                         style: TextStyle(
                           fontSize: 14,
                           color: AppColors.textSecondary,
                         ),
                       ),
                       GestureDetector(
-                        onTap: () {
-                          // Placeholder - no backend
-                        },
+                        onTap: () => context.push('/signup'),
                         child: const Text(
-                          AppStrings.register,
+                          'Sign Up',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,

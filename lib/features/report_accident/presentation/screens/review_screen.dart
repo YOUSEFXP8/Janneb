@@ -24,6 +24,7 @@ class ReviewScreen extends StatelessWidget {
       body: SafeArea(
         child: Consumer<ReportProvider>(
           builder: (context, provider, _) {
+            final car = provider.selectedCar;
             return Column(
               children: [
                 Expanded(
@@ -41,7 +42,7 @@ class ReviewScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: AppConstants.spacingLg),
 
-                        // Session Section
+                        // ── Session ────────────────────────────────────
                         _buildSection(
                           title: 'Accident Session',
                           icon: Icons.qr_code_rounded,
@@ -52,18 +53,90 @@ class ReviewScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: AppConstants.spacingMd),
 
-                        // Location Section
+                        // ── Location ───────────────────────────────────
                         _buildSection(
                           title: AppStrings.accidentLocation,
                           icon: Icons.location_on_rounded,
-                          child: _buildInfoRow(
-                            'Location',
-                            provider.locationText,
-                          ),
+                          child: provider.latitude != null
+                              ? Column(
+                                  children: [
+                                    _buildInfoRow(
+                                      'Latitude',
+                                      provider.latitude!.toStringAsFixed(6),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    _buildInfoRow(
+                                      'Longitude',
+                                      provider.longitude!.toStringAsFixed(6),
+                                    ),
+                                  ],
+                                )
+                              : _buildInfoRow(
+                                  'Location',
+                                  provider.locationText,
+                                ),
                         ),
                         const SizedBox(height: AppConstants.spacingMd),
 
-                        // Driver Details Section
+                        // ── Your Vehicle ───────────────────────────────
+                        if (car != null) ...[
+                          _buildSection(
+                            title: 'Your Vehicle',
+                            icon: Icons.directions_car_rounded,
+                            child: Column(
+                              children: [
+                                _buildInfoRow(
+                                  'Make',
+                                  car['manufacturer'] as String? ?? '—',
+                                ),
+                                const SizedBox(height: 8),
+                                _buildInfoRow(
+                                  'Type',
+                                  car['car_type'] as String? ?? '—',
+                                ),
+                                if ((car['color'] as String?)?.isNotEmpty ==
+                                    true) ...[
+                                  const SizedBox(height: 8),
+                                  _buildInfoRow(
+                                    'Color',
+                                    car['color'] as String,
+                                  ),
+                                ],
+                                if (car['year'] != null) ...[
+                                  const SizedBox(height: 8),
+                                  _buildInfoRow(
+                                    'Year',
+                                    car['year'].toString(),
+                                  ),
+                                ],
+                                const SizedBox(height: 8),
+                                _buildInfoRow(
+                                  'Plate',
+                                  provider.vehiclePlateNumber,
+                                ),
+                                if (provider.insuranceCompany.isNotEmpty) ...[
+                                  const SizedBox(height: 8),
+                                  _buildInfoRow(
+                                    'Insurance',
+                                    provider.insuranceCompany,
+                                  ),
+                                ],
+                                if ((car['insurance_id'] as String?)
+                                        ?.isNotEmpty ==
+                                    true) ...[
+                                  const SizedBox(height: 8),
+                                  _buildInfoRow(
+                                    'Policy ID',
+                                    car['insurance_id'] as String,
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                          const SizedBox(height: AppConstants.spacingMd),
+                        ],
+
+                        // ── Reporter Details ───────────────────────────
                         _buildSection(
                           title: AppStrings.details,
                           icon: Icons.person_rounded,
@@ -78,18 +151,51 @@ class ReviewScreen extends StatelessWidget {
                                 AppStrings.phoneNumber,
                                 provider.phoneNumber,
                               ),
-                              const SizedBox(height: 8),
-                              _buildInfoRow(
-                                AppStrings.vehiclePlateNumber,
-                                provider.vehiclePlateNumber,
-                              ),
-                              if (provider.insuranceCompany.isNotEmpty) ...[
+                              if (car == null &&
+                                  provider.vehiclePlateNumber.isNotEmpty) ...[
+                                const SizedBox(height: 8),
+                                _buildInfoRow(
+                                  'Plate',
+                                  provider.vehiclePlateNumber,
+                                ),
+                              ],
+                              if (car == null &&
+                                  provider.insuranceCompany.isNotEmpty) ...[
                                 const SizedBox(height: 8),
                                 _buildInfoRow(
                                   AppStrings.insuranceCompany,
                                   provider.insuranceCompany,
                                 ),
                               ],
+                            ],
+                          ),
+                        ),
+                        const SizedBox(height: AppConstants.spacingMd),
+
+                        // ── Accident Details ───────────────────────────
+                        _buildSection(
+                          title: 'Accident Details',
+                          icon: Icons.car_crash_rounded,
+                          child: Column(
+                            children: [
+                              if (provider.accidentType.isNotEmpty) ...[
+                                _buildInfoRow(
+                                  'Type',
+                                  provider.accidentType,
+                                ),
+                                const SizedBox(height: 8),
+                              ],
+                              if (provider.weatherCondition.isNotEmpty) ...[
+                                _buildInfoRow(
+                                  'Weather',
+                                  provider.weatherCondition,
+                                ),
+                                const SizedBox(height: 8),
+                              ],
+                              _buildInfoRow(
+                                'Injuries',
+                                provider.injuriesReported ? 'Yes' : 'No',
+                              ),
                               if (provider.accidentDescription.isNotEmpty) ...[
                                 const SizedBox(height: 8),
                                 _buildInfoRow(
@@ -102,11 +208,11 @@ class ReviewScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: AppConstants.spacingMd),
 
-                        // Evidence Section
+                        // ── Evidence ───────────────────────────────────
                         _buildSection(
                           title: AppStrings.evidence,
                           icon: Icons.photo_library_rounded,
-                          child: provider.capturedPhotos.isEmpty
+                          child: provider.images.isEmpty
                               ? const Text(
                                   'No photos captured',
                                   style: TextStyle(
@@ -118,7 +224,7 @@ class ReviewScreen extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      '${provider.capturedPhotos.length} photo(s) captured',
+                                      '${provider.images.length} photo(s) captured',
                                       style: const TextStyle(
                                         fontSize: 14,
                                         color: AppColors.textSecondary,
@@ -129,43 +235,19 @@ class ReviewScreen extends StatelessWidget {
                                       height: 80,
                                       child: ListView.separated(
                                         scrollDirection: Axis.horizontal,
-                                        itemCount:
-                                            provider.capturedPhotos.length,
-                                        separatorBuilder: (a1, a2) =>
+                                        itemCount: provider.images.length,
+                                        separatorBuilder: (_, _) =>
                                             const SizedBox(width: 8),
                                         itemBuilder: (context, index) {
-                                          return Container(
-                                            width: 80,
-                                            height: 80,
-                                            decoration: BoxDecoration(
-                                              color: AppColors.accentLight,
-                                              borderRadius:
-                                                  BorderRadius.circular(
-                                                    AppConstants.borderRadiusSm,
-                                                  ),
-                                              border: Border.all(
-                                                color: AppColors.accent,
-                                              ),
+                                          return ClipRRect(
+                                            borderRadius: BorderRadius.circular(
+                                              AppConstants.borderRadiusSm,
                                             ),
-                                            child: Column(
-                                              mainAxisAlignment:
-                                                  MainAxisAlignment.center,
-                                              children: [
-                                                const Icon(
-                                                  Icons.image_rounded,
-                                                  color: AppColors.primary,
-                                                  size: 24,
-                                                ),
-                                                const SizedBox(height: 2),
-                                                Text(
-                                                  '#${index + 1}',
-                                                  style: const TextStyle(
-                                                    fontSize: 10,
-                                                    color:
-                                                        AppColors.textSecondary,
-                                                  ),
-                                                ),
-                                              ],
+                                            child: Image.file(
+                                              provider.images[index],
+                                              width: 80,
+                                              height: 80,
+                                              fit: BoxFit.cover,
                                             ),
                                           );
                                         },
@@ -257,7 +339,7 @@ class ReviewScreen extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         SizedBox(
-          width: 120,
+          width: 110,
           child: Text(
             label,
             style: const TextStyle(

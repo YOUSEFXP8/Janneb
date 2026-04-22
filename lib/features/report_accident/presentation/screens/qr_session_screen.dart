@@ -12,18 +12,25 @@ class QrSessionScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: IconButton(
-          icon: const Icon(Icons.close_rounded),
-          onPressed: () => context.go('/home'),
-        ),
-        title: const Text('Accident Session'),
-      ),
-      body: SafeArea(
-        child: Consumer<ReportProvider>(
-          builder: (context, provider, child) {
-            return SingleChildScrollView(
+    return Consumer<ReportProvider>(
+      builder: (context, provider, _) => PopScope(
+        canPop: true,
+        onPopInvokedWithResult: (didPop, _) {
+          if (didPop) provider.resetSession();
+        },
+        child: Scaffold(
+          appBar: AppBar(
+            leading: IconButton(
+              icon: const Icon(Icons.close_rounded),
+              onPressed: () {
+                provider.resetSession();
+                context.pop();
+              },
+            ),
+            title: const Text('Accident Session'),
+          ),
+          body: SafeArea(
+            child: SingleChildScrollView(
               padding: const EdgeInsets.all(AppConstants.paddingScreen),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -74,8 +81,6 @@ class QrSessionScreen extends StatelessWidget {
                         onPressed: () async {
                           try {
                             await provider.createSession();
-                            // In a real app, we might wait for the other driver to join.
-                            // Here, we wait for the user to tap Continue instead of auto-navigating.
                           } catch (e) {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -123,8 +128,8 @@ class QrSessionScreen extends StatelessWidget {
                   ],
                 ],
               ),
-            );
-          },
+            ),
+          ),
         ),
       ),
     );
