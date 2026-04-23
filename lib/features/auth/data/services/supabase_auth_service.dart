@@ -25,7 +25,9 @@ class SupabaseAuthService {
     required String dob,
     required String gender,
   }) async {
+    final authId = _client.auth.currentUser?.id;
     await _client.from('user').insert({
+      'auth_id': authId,
       'national_id': nationalId,
       'name': name,
       'phone_number': phone,

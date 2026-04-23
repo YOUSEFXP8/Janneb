@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_strings.dart';
@@ -269,7 +270,32 @@ class ReviewScreen extends StatelessWidget {
                       PrimaryButton(
                         text: AppStrings.submit,
                         icon: Icons.send_rounded,
-                        onPressed: () => context.go('/report/success'),
+                        onPressed: provider.isLoading
+                            ? null
+                            : () async {
+                                try {
+                                  await provider.submitReport();
+                                  if (context.mounted) {
+                                    context.go('/report/success');
+                                  }
+                                } on PostgrestException catch (e) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text(e.message)),
+                                    );
+                                  }
+                                } catch (_) {
+                                  if (context.mounted) {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(
+                                        content: Text(
+                                          'Failed to submit report. Please try again.',
+                                        ),
+                                      ),
+                                    );
+                                  }
+                                }
+                              },
                       ),
                       const SizedBox(height: AppConstants.spacingSm + 4),
                       SecondaryButton(

@@ -1,13 +1,13 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:crashassist/common/widgets/primary_button.dart';
-import 'package:crashassist/common/widgets/secondary_button.dart';
-import 'package:crashassist/common/widgets/custom_text_field.dart';
-import 'package:crashassist/common/widgets/card_tile.dart';
-import 'package:crashassist/common/widgets/step_progress_indicator.dart';
-import 'package:crashassist/common/widgets/section_header.dart';
-import 'package:crashassist/features/report_accident/presentation/providers/report_provider.dart';
+import 'package:janneb/common/widgets/primary_button.dart';
+import 'package:janneb/common/widgets/secondary_button.dart';
+import 'package:janneb/common/widgets/custom_text_field.dart';
+import 'package:janneb/common/widgets/card_tile.dart';
+import 'package:janneb/common/widgets/step_progress_indicator.dart';
+import 'package:janneb/common/widgets/section_header.dart';
+import 'package:janneb/features/report_accident/presentation/providers/report_provider.dart';
 
 void main() {
   group('PrimaryButton', () {

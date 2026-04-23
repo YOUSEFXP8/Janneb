@@ -13,11 +13,11 @@ Future<void> main() async {
     url: 'https://buyflcxseboygugyemmt.supabase.co',
     anonKey: 'sb_publishable_HcNTHRXTB3BQCPgr9oIarQ_LiR-VMxK',
   );
-  runApp(const CrashAssistApp());
+  runApp(const JannebApp());
 }
 
-class CrashAssistApp extends StatelessWidget {
-  const CrashAssistApp({super.key});
+class JannebApp extends StatelessWidget {
+  const JannebApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +31,7 @@ class CrashAssistApp extends StatelessWidget {
         builder: (context) {
           final authProvider = context.read<AuthProvider>();
           return MaterialApp.router(
-            title: 'CrashAssist',
+            title: 'Janneb',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             routerConfig: AppRouter.createRouter(authProvider),

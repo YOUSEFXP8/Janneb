@@ -15,9 +15,9 @@ class _FaqScreenState extends State<FaqScreen> {
 
   static const List<Map<String, String>> _generalFaqs = [
     {
-      'q': 'What is CrashAssist?',
+      'q': 'What is Janneb?',
       'a':
-          'CrashAssist helps you quickly file accident reports with photos, location, and driver details. Reports are sent directly to relevant traffic authorities.',
+          'Janneb helps you quickly file accident reports with photos, location, and driver details. Reports are sent directly to relevant traffic authorities.',
     },
     {
       'q': 'Is my data secure?',
@@ -32,7 +32,7 @@ class _FaqScreenState extends State<FaqScreen> {
     {
       'q': 'Which types of accidents can I report?',
       'a':
-          'CrashAssist supports minor and moderate vehicle accidents. For serious accidents with injuries, always call emergency services first.',
+          'Janneb supports minor and moderate vehicle accidents. For serious accidents with injuries, always call emergency services first.',
     },
   ];
 

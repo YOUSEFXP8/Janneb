@@ -2,7 +2,7 @@ class AppStrings {
   AppStrings._();
 
   // App
-  static const String appName = 'CrashAssist';
+  static const String appName = 'Janneb';
   static const String appTagline = 'Report accidents quickly and safely';
 
   // Onboarding

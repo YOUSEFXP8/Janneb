@@ -4,13 +4,32 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_strings.dart';
+import '../../../../common/widgets/report_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../notifications/presentation/providers/notification_provider.dart';
 import '../../../notifications/presentation/widgets/notification_menu.dart';
+import '../../../report_accident/presentation/providers/report_provider.dart';
 import '../widgets/action_card.dart';
 
-class HomeScreen extends StatelessWidget {
+class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final auth = context.read<AuthProvider>();
+      final nationalId = auth.nationalId ?? '';
+      if (nationalId.isNotEmpty) {
+        context.read<ReportProvider>().fetchReports(nationalId);
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,12 +56,12 @@ class HomeScreen extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: IconButton(
-                      
-                      icon: Icon(Icons.person_rounded,size: 28,
-                      color: AppColors.primary,),
-                        onPressed: (){
-                          context.push('/profile');
-                        },
+                      icon: const Icon(
+                        Icons.person_rounded,
+                        size: 28,
+                        color: AppColors.primary,
+                      ),
+                      onPressed: () => context.push('/profile'),
                     ),
                   ),
                   const SizedBox(width: AppConstants.spacingMd),
@@ -215,7 +234,6 @@ class HomeScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: AppConstants.spacingMd),
-
               GridView.count(
                 shrinkWrap: true,
                 physics: const NeverScrollableScrollPhysics(),
@@ -228,25 +246,19 @@ class HomeScreen extends StatelessWidget {
                     title: AppStrings.myReports,
                     icon: Icons.description_rounded,
                     iconColor: AppColors.primary,
-                    onTap: () {
-                      context.push('/my-reports');
-                    },
+                    onTap: () => context.push('/my-reports'),
                   ),
                   ActionCard(
                     title: AppStrings.emergencyCall,
                     icon: Icons.phone_in_talk_rounded,
                     iconColor: AppColors.error,
-                    onTap: () {
-                      context.push('/emergency');
-                    },
+                    onTap: () => context.push('/emergency'),
                   ),
                   ActionCard(
                     title: AppStrings.help,
                     icon: Icons.help_outline_rounded,
                     iconColor: AppColors.warning,
-                    onTap: () {
-                      context.push('/help');
-                    },
+                    onTap: () => context.push('/help'),
                   ),
                   ActionCard(
                     title: 'Insurance',
@@ -259,50 +271,88 @@ class HomeScreen extends StatelessWidget {
               const SizedBox(height: AppConstants.spacingLg),
 
               // Recent Reports Section
-              const Text(
-                'Recent Reports',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.textPrimary,
-                ),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text(
+                    'Recent Reports',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.w600,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                 
+                ],
               ),
               const SizedBox(height: AppConstants.spacingMd),
 
-              // Empty state
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 48),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(
-                    AppConstants.borderRadius,
-                  ),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Column(
-                  children: [
-                    Icon(
-                      Icons.inbox_rounded,
-                      size: 48,
-                      color: AppColors.textHint.withValues(alpha: 0.5),
-                    ),
-                    const SizedBox(height: 12),
-                    const Text(
-                      'No reports yet',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
-                        color: AppColors.textSecondary,
+              Consumer<ReportProvider>(
+                builder: (context, provider, _) {
+                  if (provider.isLoading) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.symmetric(vertical: 32),
+                        child: CircularProgressIndicator(),
                       ),
-                    ),
-                    const SizedBox(height: 4),
-                    const Text(
-                      'Your accident reports will appear here',
-                      style: TextStyle(fontSize: 13, color: AppColors.textHint),
-                    ),
-                  ],
-                ),
+                    );
+                  }
+
+                  final recent = provider.reports.take(3).toList();
+
+                  if (recent.isEmpty) {
+                    return Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 48),
+                      decoration: BoxDecoration(
+                        color: AppColors.surface,
+                        borderRadius: BorderRadius.circular(
+                          AppConstants.borderRadius,
+                        ),
+                        border: Border.all(color: AppColors.border),
+                      ),
+                      child: Column(
+                        children: [
+                          Icon(
+                            Icons.inbox_rounded,
+                            size: 48,
+                            color: AppColors.textHint.withValues(alpha: 0.5),
+                          ),
+                          const SizedBox(height: 12),
+                          const Text(
+                            'No reports yet',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w500,
+                              color: AppColors.textSecondary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          const Text(
+                            'Your accident reports will appear here',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color: AppColors.textHint,
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  }
+
+                  return Column(
+                    children: recent
+                        .map(
+                          (report) => ReportCard(
+                            report: report,
+                            onTap: () => context.push(
+                              '/report-details/${report.accidentId}',
+                            ),
+                          ),
+                        )
+                        .toList(),
+                  );
+                },
               ),
             ],
           ),

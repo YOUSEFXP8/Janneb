@@ -41,7 +41,7 @@ const Map<String, _TopicContent> _topics = {
     description:
         'Reporting an accident correctly protects you legally and helps '
         'speed up your insurance claim. Follow these steps to file a complete '
-        'and accurate report through CrashAssist.',
+        'and accurate report through Janneb.',
     sections: [
       _TopicSection(
         label: 'WHAT TO DO IMMEDIATELY',
@@ -53,7 +53,7 @@ const Map<String, _TopicContent> _topics = {
           _InfoItem(Icons.warning_amber_rounded, 'Turn on hazard lights',
               'Warn other drivers and prevent a second accident'),
           _InfoItem(Icons.camera_alt_rounded, 'Start documenting',
-              'Open CrashAssist and begin the reporting flow'),
+              'Open Janneb and begin the reporting flow'),
         ],
       ),
       _TopicSection(
@@ -145,7 +145,7 @@ const Map<String, _TopicContent> _topics = {
     description:
         'Your exact accident location helps officers respond faster and '
         'ensures your report is linked to the correct jurisdiction. '
-        'CrashAssist detects your location automatically, but you can '
+        'Janneb detects your location automatically, but you can '
         'adjust it manually if needed.',
     sections: [
       _TopicSection(
@@ -193,7 +193,7 @@ const Map<String, _TopicContent> _topics = {
     subtitle: 'Tracking your report',
     icon: Icons.schedule_rounded,
     description:
-        'Once your report is submitted, CrashAssist tracks it through '
+        'Once your report is submitted, Janneb tracks it through '
         'every stage of review. You will receive notifications as the '
         'status changes, and you can check progress any time in My Reports.',
     sections: [
@@ -216,7 +216,7 @@ const Map<String, _TopicContent> _topics = {
           _InfoItem(Icons.sms_rounded, 'SMS confirmation',
               'You will receive a reference number by text after submission'),
           _InfoItem(Icons.notifications_rounded, 'Push notifications',
-              'CrashAssist notifies you each time your report status changes'),
+              'Janneb notifies you each time your report status changes'),
           _InfoItem(Icons.article_rounded, 'Official report download',
               'Once completed, download the official report from My Reports'),
           _InfoItem(Icons.business_rounded, 'Insurance forwarding',

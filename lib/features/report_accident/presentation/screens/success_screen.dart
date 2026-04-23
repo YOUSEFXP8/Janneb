@@ -6,6 +6,7 @@ import '../../../../core/constants/app_constants.dart';
 import '../../../../core/constants/app_strings.dart';
 import '../../../../common/widgets/primary_button.dart';
 import '../../../../common/widgets/secondary_button.dart';
+import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/report_provider.dart';
 
 class SuccessScreen extends StatefulWidget {
@@ -173,10 +174,17 @@ class _SuccessScreenState extends State<SuccessScreen>
                 child: Column(
                   children: [
                     PrimaryButton(
-                      text: AppStrings.trackReport,
-                      icon: Icons.track_changes_rounded,
-                      onPressed: () {
-                        // Placeholder - no backend
+                      text: 'View Report',
+                      icon: Icons.description_rounded,
+                      onPressed: () async {
+                        final auth = context.read<AuthProvider>();
+                        final report = context.read<ReportProvider>();
+                        final nationalId = auth.nationalId ?? '';
+                        await report.fetchReports(nationalId);
+                        if (!mounted) return;
+                        report.resetReport();
+                        // ignore: use_build_context_synchronously
+                        context.go('/my-reports');
                       },
                     ),
                     const SizedBox(height: AppConstants.spacingSm + 4),

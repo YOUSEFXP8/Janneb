@@ -116,6 +116,7 @@ class AuthProvider extends ChangeNotifier {
         gender: gender,
       );
       userProfile = {
+        'auth_id': _service.currentSession?.user.id,
         'national_id': nationalId,
         'name': name,
         'phone_number': phone,

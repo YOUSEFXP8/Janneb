@@ -17,7 +17,7 @@ class BiometricService {
   Future<bool> authenticate() async {
     try {
       return await _auth.authenticate(
-        localizedReason: 'Use biometric to access CrashAssist',
+        localizedReason: 'Use biometric to access Janneb',
         options: const AuthenticationOptions(
           stickyAuth: true,
           biometricOnly: true,
