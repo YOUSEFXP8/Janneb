@@ -23,6 +23,8 @@ class _QrSessionScreenState extends State<QrSessionScreen> {
   final _joinCodeController = TextEditingController();
   final _joinFormKey = GlobalKey<FormState>();
 
+  bool _isCreatingSession = false;
+
   @override
   void dispose() {
     _joinCodeController.dispose();
@@ -34,60 +36,72 @@ class _QrSessionScreenState extends State<QrSessionScreen> {
     AuthProvider auth,
     ReportProvider provider,
   ) async {
-    final isAr = context.read<LocaleProvider>().isArabic;
-    final l10n = AppLocalizations(isAr);
+    setState(() {
+      _isCreatingSession = true;
+    });
 
-    if (auth.cars.isEmpty) {
-      await auth.fetchCars();
+    try {
+      final isAr = context.read<LocaleProvider>().isArabic;
+      final l10n = AppLocalizations(isAr);
+
       if (auth.cars.isEmpty) {
-        if (!context.mounted) return;
-        final errorMsg = auth.error != null 
-            ? 'Error loading vehicles: ${auth.error}'
-            : l10n.noVehiclesForAccident;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(errorMsg)),
-        );
-        return;
+        await auth.fetchCars();
+        if (auth.cars.isEmpty) {
+          if (!context.mounted) return;
+          final errorMsg = auth.error != null 
+              ? 'Error loading vehicles: ${auth.error}'
+              : l10n.noVehiclesForAccident;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(errorMsg)),
+          );
+          return;
+        }
       }
-    }
 
-    double lat = 0.0;
-    double lng = 0.0;
-    try {
-      LocationPermission permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) {
-        permission = await Geolocator.requestPermission();
+      double lat = 0.0;
+      double lng = 0.0;
+      try {
+        LocationPermission permission = await Geolocator.checkPermission();
+        if (permission == LocationPermission.denied) {
+          permission = await Geolocator.requestPermission();
+        }
+        if (permission == LocationPermission.whileInUse ||
+            permission == LocationPermission.always) {
+          final pos = await Geolocator.getCurrentPosition(
+            locationSettings: const LocationSettings(
+              accuracy: LocationAccuracy.high,
+              timeLimit: Duration(seconds: 10),
+            ),
+          );
+          lat = pos.latitude;
+          lng = pos.longitude;
+        }
+      } catch (_) {
+        // Fall back to 0,0 if GPS is unavailable.
       }
-      if (permission == LocationPermission.whileInUse ||
-          permission == LocationPermission.always) {
-        final pos = await Geolocator.getCurrentPosition(
-          locationSettings: const LocationSettings(
-            accuracy: LocationAccuracy.high,
-            timeLimit: Duration(seconds: 10),
-          ),
-        );
-        lat = pos.latitude;
-        lng = pos.longitude;
-      }
-    } catch (_) {
-      // Fall back to 0,0 if GPS is unavailable.
-    }
 
-    if (!context.mounted) return;
-
-    try {
-      await provider.createSession(
-        nationalId: auth.nationalId ?? '',
-        carRegistrationId:
-            auth.cars.first['car_registration_id'] as String? ?? '',
-        lat: lat,
-        lng: lng,
-      );
-    } catch (_) {
       if (!context.mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(AppLocalizations(isAr).failedToCreate)),
-      );
+
+      try {
+        await provider.createSession(
+          nationalId: auth.nationalId ?? '',
+          carRegistrationId:
+              auth.cars.first['car_registration_id'] as String? ?? '',
+          lat: lat,
+          lng: lng,
+        );
+      } catch (_) {
+        if (!context.mounted) return;
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text(AppLocalizations(isAr).failedToCreate)),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isCreatingSession = false;
+        });
+      }
     }
   }
 
@@ -231,7 +245,7 @@ class _QrSessionScreenState extends State<QrSessionScreen> {
                       onPressed: () => context.push('/report/capture-evidence'),
                     ),
                   ] else ...[
-                    if (provider.isLoading)
+                    if (provider.isLoading || _isCreatingSession)
                       const Center(child: CircularProgressIndicator())
                     else ...[
                       PrimaryButton(

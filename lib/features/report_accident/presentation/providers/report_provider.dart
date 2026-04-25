@@ -95,13 +95,16 @@ class ReportProvider extends ChangeNotifier {
     notifyListeners();
     try {
       final client = Supabase.instance.client;
-      final result = await client.rpc('create_accident', params: {
-        'p_national_id': nationalId,
-        'p_car_registration_id': carRegistrationId,
-        'p_lat': lat,
-        'p_long': lng,
-        'p_statement': '',
-      });
+      final result = await client.rpc(
+        'create_accident',
+        params: {
+          'p_national_id': nationalId,
+          'p_car_registration_id': carRegistrationId,
+          'p_lat': lat,
+          'p_long': lng,
+          'p_statement': '',
+        },
+      );
       _sessionId = result['join_code'] as String?;
       _accidentId = result['accident_id'] as int?;
       _isJoiningSession = false;
@@ -157,16 +160,22 @@ class ReportProvider extends ChangeNotifier {
             'p_statement': _accidentDescription,
           },
         );
+        print('join_accident result: $result');
+        print('result type: ${result.runtimeType}');
         _lastAccidentId = result?['accident_id'] as int?;
       } else {
         _lastAccidentId = _accidentId;
-        
+
         // Update the statement and selected car, since they were filled out after createSession
         if (_accidentId != null && nationalId != null) {
-          await client.from('accident_party').update({
-            'car_registration_id': _selectedCar?['car_registration_id'],
-            'statement': _accidentDescription,
-          }).eq('accident_id', _accidentId!).eq('national_id', nationalId);
+          await client
+              .from('accident_party')
+              .update({
+                'car_registration_id': _selectedCar?['car_registration_id'],
+                'statement': _accidentDescription,
+              })
+              .eq('accident_id', _accidentId!)
+              .eq('national_id', nationalId);
         }
       }
 
@@ -313,7 +322,8 @@ class ReportProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool get isSessionReady => true; // Creator no longer needs a pre-generated code
+  bool get isSessionReady =>
+      true; // Creator no longer needs a pre-generated code
   bool get hasPhotos => _images.isNotEmpty;
   bool get hasDriverDetails =>
       _fullName.isNotEmpty &&
