@@ -15,7 +15,7 @@ class QrScannerScreen extends StatefulWidget {
 class _QrScannerScreenState extends State<QrScannerScreen> {
   bool _isProcessing = false;
 
-  void _onDetect(BarcodeCapture capture) async {
+  void _onDetect(BarcodeCapture capture) {
     if (_isProcessing) return;
 
     final barcodes = capture.barcodes;
@@ -26,11 +26,8 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
       });
 
       final provider = context.read<ReportProvider>();
-      await provider.joinSession(scannedCode);
-
-      if (mounted) {
-        context.pushReplacement('/report/capture-evidence');
-      }
+      provider.joinSession(scannedCode);
+      if (mounted) context.pushReplacement('/report/capture-evidence');
     }
   }
 

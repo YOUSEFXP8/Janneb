@@ -44,6 +44,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
     if (password.isEmpty) return 0;
     int score = 1;
     if (password.length >= 8) score++;
+    if (password.contains(RegExp(r'[a-z]'))) score++;
     if (password.contains(RegExp(r'[A-Z]'))) score++;
     if (password.contains(RegExp(r'[0-9]'))) score++;
     if (password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) score++;
@@ -124,6 +125,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
     final filledSegments = (strength - 1).clamp(0, 3);
     final hasLength = password.length >= 8;
+    final hasLower = password.contains(RegExp(r'[a-z]'));
     final hasUpper = password.contains(RegExp(r'[A-Z]'));
     final hasNumber = password.contains(RegExp(r'[0-9]'));
     final hasSpecial = password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'));
@@ -160,6 +162,7 @@ class _SignUpScreenState extends State<SignUpScreen> {
         ),
         const SizedBox(height: 10),
         _buildRequirement(l10n.reqLength, hasLength),
+        _buildRequirement(l10n.reqLowercase, hasLower),
         _buildRequirement(l10n.reqUppercase, hasUpper),
         _buildRequirement(l10n.reqNumber, hasNumber),
         _buildRequirement(l10n.reqSpecial, hasSpecial),

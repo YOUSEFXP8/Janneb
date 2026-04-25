@@ -19,6 +19,7 @@ class AuthProvider extends ChangeNotifier {
   Future<void> _initialize() async {
     if (isAuthenticated) {
       await fetchProfile();
+      await fetchCars();
     }
   }
 
@@ -197,8 +198,8 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
     try {
       cars = await _service.fetchCars(id);
-    } catch (_) {
-      error = 'Failed to load vehicles';
+    } catch (e) {
+      error = e.toString();
     } finally {
       isLoading = false;
       notifyListeners();

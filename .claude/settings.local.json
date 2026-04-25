@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s 'https://buyflcxseboygugyemmt.supabase.co/rest/v1/accident_party?limit=1' -H 'apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1eWZsY3hzZWJveWd1Z3llbW10Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjA5NDU3OSwiZXhwIjoyMDkxNjcwNTc5fQ.7WfLvzbJc2mg--OqmjyMOaDXKOHQ2qk8Nbprmm0Mlqs' -H 'Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ1eWZsY3hzZWJveWd1Z3llbW10Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3NjA5NDU3OSwiZXhwIjoyMDkxNjcwNTc5fQ.7WfLvzbJc2mg--OqmjyMOaDXKOHQ2qk8Nbprmm0Mlqs')"
+    ]
+  }
+}

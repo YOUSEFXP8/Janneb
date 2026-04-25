@@ -26,6 +26,7 @@ class _HomeScreenState extends State<HomeScreen> {
       final auth = context.read<AuthProvider>();
       final nationalId = auth.nationalId ?? '';
       if (nationalId.isNotEmpty) {
+        auth.fetchCars();
         context.read<ReportProvider>().fetchReports(nationalId);
       }
     });
@@ -177,7 +178,10 @@ class _HomeScreenState extends State<HomeScreen> {
                       width: double.infinity,
                       height: 50,
                       child: ElevatedButton(
-                        onPressed: () => context.push('/report/qr-session'),
+                        onPressed: () {
+                          context.read<ReportProvider>().resetSession();
+                          context.push('/report/qr-session');
+                        },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: AppColors.primary,

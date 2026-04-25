@@ -67,6 +67,7 @@ class AppLocalizations {
   String get strengthGood => _isAr ? 'جيدة' : 'Good';
   String get strengthStrong => _isAr ? 'قوية' : 'Strong';
   String get reqLength => _isAr ? 'على الأقل 8 أحرف' : 'At least 8 characters';
+  String get reqLowercase => _isAr ? 'حرف صغير (a–z)' : 'Lowercase letter (a–z)';
   String get reqUppercase => _isAr ? 'حرف كبير (A–Z)' : 'Uppercase letter (A–Z)';
   String get reqNumber => _isAr ? 'رقم (0–9)' : 'Number (0–9)';
   String get reqSpecial => _isAr ? 'رمز خاص (!@#…)' : 'Special character (!@#…)';

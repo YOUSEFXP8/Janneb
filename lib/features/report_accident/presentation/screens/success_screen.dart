@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
+import 'package:qr_flutter/qr_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/l10n/app_localizations.dart';
@@ -57,13 +59,16 @@ class _SuccessScreenState extends State<SuccessScreen>
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context);
+    final provider = context.read<ReportProvider>();
+    final joinCode = !provider.isJoiningSession ? provider.sessionId : null;
+
     return Scaffold(
       body: SafeArea(
-        child: Padding(
+        child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppConstants.paddingScreen),
           child: Column(
             children: [
-              const Spacer(flex: 2),
+              const SizedBox(height: AppConstants.spacingXl),
 
               ScaleTransition(
                 scale: _scaleAnimation,
@@ -115,55 +120,82 @@ class _SuccessScreenState extends State<SuccessScreen>
                     ),
                     const SizedBox(height: AppConstants.spacingLg),
 
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 14,
+                    // Show join code QR so the other party can link their report.
+                    if (joinCode != null) ...[
+                      Text(
+                        l10n.shareQrDesc,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          fontSize: 14,
+                          color: AppColors.textSecondary,
+                        ),
                       ),
-                      decoration: BoxDecoration(
-                        color: AppColors.accentLight,
-                        borderRadius:
-                            BorderRadius.circular(AppConstants.borderRadius),
-                        border: Border.all(color: AppColors.accent),
+                      const SizedBox(height: AppConstants.spacingMd),
+                      QrImageView(
+                        data: joinCode,
+                        version: QrVersions.auto,
+                        size: 180.0,
+                        backgroundColor: Colors.white,
                       ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const Icon(
-                            Icons.receipt_long_rounded,
-                            color: AppColors.primary,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 10),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                l10n.reportReference,
-                                style: const TextStyle(
-                                  fontSize: 12,
-                                  color: AppColors.textSecondary,
+                      const SizedBox(height: AppConstants.spacingMd),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 24, vertical: 14),
+                        decoration: BoxDecoration(
+                          color: AppColors.accentLight,
+                          borderRadius: BorderRadius.circular(
+                              AppConstants.borderRadius),
+                          border: Border.all(color: AppColors.accent),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  l10n.joinCode,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.textSecondary,
+                                  ),
                                 ),
-                              ),
-                              Text(
-                                'CR-${DateTime.now().millisecondsSinceEpoch.toString().substring(7)}',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w700,
-                                  color: AppColors.primary,
-                                  letterSpacing: 1,
+                                Text(
+                                  joinCode,
+                                  style: const TextStyle(
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.w800,
+                                    color: AppColors.primary,
+                                    letterSpacing: 6,
+                                  ),
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
+                              ],
+                            ),
+                            IconButton(
+                              icon: const Icon(Icons.copy_rounded,
+                                  color: AppColors.primary),
+                              tooltip: l10n.copyCode,
+                              onPressed: () {
+                                Clipboard.setData(
+                                    ClipboardData(text: joinCode));
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(l10n.codeCopied),
+                                    duration: const Duration(seconds: 2),
+                                  ),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
+                      const SizedBox(height: AppConstants.spacingLg),
+                    ],
                   ],
                 ),
               ),
 
-              const Spacer(flex: 3),
+              const SizedBox(height: AppConstants.spacingXl),
 
               FadeTransition(
                 opacity: _fadeAnimation,
@@ -173,7 +205,7 @@ class _SuccessScreenState extends State<SuccessScreen>
                       text: l10n.viewReport,
                       icon: Icons.description_rounded,
                       onPressed: () {
-                        context.read<ReportProvider>().resetReport();
+                        provider.resetReport();
                         context.go('/my-reports');
                       },
                     ),
@@ -182,7 +214,7 @@ class _SuccessScreenState extends State<SuccessScreen>
                       text: l10n.returnHome,
                       icon: Icons.home_rounded,
                       onPressed: () {
-                        context.read<ReportProvider>().resetReport();
+                        provider.resetReport();
                         context.go('/home');
                       },
                     ),

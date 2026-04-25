@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:qr_flutter/qr_flutter.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/l10n/app_localizations.dart';
@@ -29,43 +29,72 @@ class _QrSessionScreenState extends State<QrSessionScreen> {
     super.dispose();
   }
 
-  Future<void> _submitManualJoin(
+  Future<void> _createSession(
     BuildContext context,
     AuthProvider auth,
     ReportProvider provider,
   ) async {
-    if (!(_joinFormKey.currentState?.validate() ?? false)) return;
-
-    final carId = auth.cars.isNotEmpty
-        ? (auth.cars.first['car_registration_id'] as String? ?? '')
-        : '';
-
     final isAr = context.read<LocaleProvider>().isArabic;
-    try {
-      await provider.joinAccident(
-        joinCode: _joinCodeController.text.trim(),
-        nationalId: auth.nationalId ?? '',
-        carRegistrationId: carId,
-      );
-      if (context.mounted) context.push('/report/capture-evidence');
-    } on PostgrestException catch (e) {
-      if (!context.mounted) return;
-      final l10n = AppLocalizations(isAr);
-      final lower = e.message.toLowerCase();
-      final msg = lower.contains('invalid')
-          ? l10n.invalidJoinCode
-          : lower.contains('already')
-              ? l10n.alreadyLinked
-              : l10n.failedToJoin;
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
-    } catch (_) {
-      if (context.mounted) {
-        final l10n = AppLocalizations(isAr);
+    final l10n = AppLocalizations(isAr);
+
+    if (auth.cars.isEmpty) {
+      await auth.fetchCars();
+      if (auth.cars.isEmpty) {
+        if (!context.mounted) return;
+        final errorMsg = auth.error != null 
+            ? 'Error loading vehicles: ${auth.error}'
+            : l10n.noVehiclesForAccident;
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(l10n.failedToJoin)),
+          SnackBar(content: Text(errorMsg)),
         );
+        return;
       }
     }
+
+    double lat = 0.0;
+    double lng = 0.0;
+    try {
+      LocationPermission permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.whileInUse ||
+          permission == LocationPermission.always) {
+        final pos = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.high,
+            timeLimit: Duration(seconds: 10),
+          ),
+        );
+        lat = pos.latitude;
+        lng = pos.longitude;
+      }
+    } catch (_) {
+      // Fall back to 0,0 if GPS is unavailable.
+    }
+
+    if (!context.mounted) return;
+
+    try {
+      await provider.createSession(
+        nationalId: auth.nationalId ?? '',
+        carRegistrationId:
+            auth.cars.first['car_registration_id'] as String? ?? '',
+        lat: lat,
+        lng: lng,
+      );
+    } catch (_) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(AppLocalizations(isAr).failedToCreate)),
+      );
+    }
+  }
+
+  void _submitManualJoin(BuildContext context, ReportProvider provider) {
+    if (!(_joinFormKey.currentState?.validate() ?? false)) return;
+    provider.joinAccident(joinCode: _joinCodeController.text.trim());
+    context.push('/report/capture-evidence');
   }
 
   Widget _buildOrDivider(AppLocalizations l10n) {
@@ -125,7 +154,8 @@ class _QrSessionScreenState extends State<QrSessionScreen> {
                   ),
                   const SizedBox(height: AppConstants.spacingXl),
 
-                  if (provider.sessionId != null) ...[
+                  // ── Creator path ──────────────────────────────────────────
+                  if (provider.sessionId != null && !provider.isJoiningSession) ...[
                     Center(
                       child: QrImageView(
                         data: provider.sessionId!,
@@ -206,27 +236,17 @@ class _QrSessionScreenState extends State<QrSessionScreen> {
                     else ...[
                       PrimaryButton(
                         text: l10n.createSession,
-                        onPressed: () async {
-                          final isAr =
-                              context.read<LocaleProvider>().isArabic;
-                          try {
-                            await provider.createSession();
-                          } catch (_) {
-                            if (context.mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                    content: Text(
-                                        AppLocalizations(isAr).failedToCreate)),
-                              );
-                            }
-                          }
-                        },
+                        onPressed: () =>
+                            _createSession(context, auth, provider),
                       ),
                       const SizedBox(height: AppConstants.spacingLg),
                       _buildOrDivider(l10n),
                       const SizedBox(height: AppConstants.spacingLg),
+
+                      // ── Joiner path ────────────────────────────────────────
                       Container(
-                        padding: const EdgeInsets.all(AppConstants.paddingCard),
+                        padding:
+                            const EdgeInsets.all(AppConstants.paddingCard),
                         decoration: BoxDecoration(
                           color: AppColors.background,
                           borderRadius: BorderRadius.circular(
@@ -264,7 +284,6 @@ class _QrSessionScreenState extends State<QrSessionScreen> {
                               const SizedBox(height: AppConstants.spacingMd),
                               TextFormField(
                                 controller: _joinCodeController,
-                                keyboardType: TextInputType.number,
                                 decoration: InputDecoration(
                                   labelText: l10n.enterJoinCode,
                                   hintText: l10n.joinCodeHint,
@@ -281,13 +300,8 @@ class _QrSessionScreenState extends State<QrSessionScreen> {
                               const SizedBox(height: AppConstants.spacingLg),
                               PrimaryButton(
                                 text: l10n.joinSession,
-                                onPressed: provider.isLoading
-                                    ? null
-                                    : () => _submitManualJoin(
-                                          context,
-                                          auth,
-                                          provider,
-                                        ),
+                                onPressed: () =>
+                                    _submitManualJoin(context, provider),
                               ),
                             ],
                           ),

@@ -1,5 +1,4 @@
 import 'dart:io';
-import 'dart:math';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../data/models/accident_report.dart';
@@ -30,9 +29,12 @@ class ReportProvider extends ChangeNotifier {
     );
   }
 
-  // QR Session
+  // Server-assigned join_code (set after createSession or at submit for joiner).
   String? _sessionId;
   String? get sessionId => _sessionId;
+
+  // accident_id returned by create_accident when creator calls createSession().
+  int? _accidentId;
 
   bool _isJoiningSession = false;
   bool get isJoiningSession => _isJoiningSession;
@@ -80,52 +82,36 @@ class ReportProvider extends ChangeNotifier {
   String _accidentDescription = '';
   String get accidentDescription => _accidentDescription;
 
-  // Generate a local join code; actual accident record is created at review/submit time.
-  Future<void> createSession() async {
-    _isLoading = true;
-    notifyListeners();
-    try {
-      final rand = Random.secure();
-      _sessionId = List.generate(6, (_) => rand.nextInt(10)).join();
-      _isJoiningSession = false;
-    } finally {
-      _isLoading = false;
-      notifyListeners();
-    }
-  }
-
-  // Called by QR scanner path — stores the scanned code and marks this as a join.
-  Future<void> joinSession(String id) async {
-    _sessionId = id;
-    _isJoiningSession = true;
-    notifyListeners();
-  }
-
-  // Called by manual join code path — calls join_accident RPC.
-  Future<void> joinAccident({
-    required String joinCode,
+  // Creator path: calls create_accident immediately so the join_code is available
+  // as a QR code before the other party needs to scan it.
+  Future<void> createSession({
     required String nationalId,
     required String carRegistrationId,
+    required double lat,
+    required double lng,
   }) async {
     _isLoading = true;
     _reportError = null;
     notifyListeners();
     try {
       final client = Supabase.instance.client;
-      await client.rpc(
-        'join_accident',
-        params: {
-          'p_join_code': joinCode,
-          'p_national_id': nationalId,
-          'p_car_registration_id': carRegistrationId,
-          'p_statement': '',
-        },
-      );
-      _sessionId = joinCode;
-    } on PostgrestException {
+      final result = await client.rpc('create_accident', params: {
+        'p_national_id': nationalId,
+        'p_car_registration_id': carRegistrationId,
+        'p_lat': lat,
+        'p_long': lng,
+        'p_statement': '',
+      });
+      _sessionId = result['join_code'] as String?;
+      _accidentId = result['accident_id'] as int?;
+      _isJoiningSession = false;
+      _latitude = lat;
+      _longitude = lng;
+    } on PostgrestException catch (e) {
+      _reportError = e.message;
       rethrow;
     } catch (_) {
-      _reportError = 'Failed to join accident';
+      _reportError = 'Failed to create session';
       rethrow;
     } finally {
       _isLoading = false;
@@ -133,7 +119,24 @@ class ReportProvider extends ChangeNotifier {
     }
   }
 
-  // Called from ReviewScreen on submit — joins or creates the accident record and uploads media.
+  // QR scanner path: stores the scanned server-assigned join_code.
+  void joinSession(String joinCode) {
+    _sessionId = joinCode;
+    _isJoiningSession = true;
+    notifyListeners();
+  }
+
+  // Manual code entry path: stores the entered code for use at submit time.
+  // Actual validation against the DB happens when submitReport() is called.
+  void joinAccident({required String joinCode}) {
+    _sessionId = joinCode;
+    _isJoiningSession = true;
+    notifyListeners();
+  }
+
+  // Called from ReviewScreen on submit.
+  // Creator: calls create_accident RPC, stores returned join_code for the success screen.
+  // Joiner: calls join_accident RPC with the previously scanned/entered join_code.
   Future<void> submitReport() async {
     _isLoading = true;
     _reportError = null;
@@ -143,10 +146,8 @@ class ReportProvider extends ChangeNotifier {
       final nationalId =
           client.auth.currentUser?.userMetadata?['national_id'] as String?;
 
-      int? accidentId;
-
       if (_isJoiningSession) {
-        // User scanned someone else's QR — join the existing accident.
+        // Joiner: link to the existing accident created by the other party.
         final result = await client.rpc(
           'join_accident',
           params: {
@@ -156,26 +157,21 @@ class ReportProvider extends ChangeNotifier {
             'p_statement': _accidentDescription,
           },
         );
-        accidentId = result?['accident_id'] as int?;
+        _lastAccidentId = result?['accident_id'] as int?;
       } else {
-        // User created the session — create a new accident record.
-        final result = await client.rpc(
-          'create_accident',
-          params: {
-            'p_national_id': nationalId,
-            'p_car_registration_id': _selectedCar?['car_registration_id'],
-            'p_lat': _latitude,
-            'p_long': _longitude,
-            'p_statement': _accidentDescription,
-            'p_join_code': _sessionId,
-          },
-        );
-        accidentId = result['accident_id'] as int?;
+        _lastAccidentId = _accidentId;
+        
+        // Update the statement and selected car, since they were filled out after createSession
+        if (_accidentId != null && nationalId != null) {
+          await client.from('accident_party').update({
+            'car_registration_id': _selectedCar?['car_registration_id'],
+            'statement': _accidentDescription,
+          }).eq('accident_id', _accidentId!).eq('national_id', nationalId);
+        }
       }
 
-      _lastAccidentId = accidentId;
-
       // Upload captured images to accident-media bucket.
+      final accidentId = _lastAccidentId;
       if (accidentId != null) {
         for (int i = 0; i < _images.length; i++) {
           try {
@@ -248,6 +244,7 @@ class ReportProvider extends ChangeNotifier {
 
   void resetSession() {
     _sessionId = null;
+    _accidentId = null;
     _isJoiningSession = false;
     notifyListeners();
   }
@@ -297,6 +294,7 @@ class ReportProvider extends ChangeNotifier {
 
   void resetReport() {
     _sessionId = null;
+    _accidentId = null;
     _isJoiningSession = false;
     _isLoading = false;
     _images.clear();
@@ -315,7 +313,7 @@ class ReportProvider extends ChangeNotifier {
     notifyListeners();
   }
 
-  bool get isSessionReady => _sessionId != null;
+  bool get isSessionReady => true; // Creator no longer needs a pre-generated code
   bool get hasPhotos => _images.isNotEmpty;
   bool get hasDriverDetails =>
       _fullName.isNotEmpty &&
