@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/l10n/app_localizations.dart';
 
 class FaqScreen extends StatefulWidget {
   const FaqScreen({super.key});
@@ -13,65 +14,22 @@ class FaqScreen extends StatefulWidget {
 class _FaqScreenState extends State<FaqScreen> {
   String _selectedFilter = 'all';
 
-  static const List<Map<String, String>> _generalFaqs = [
-    {
-      'q': 'What is Janneb?',
-      'a':
-          'Janneb helps you quickly file accident reports with photos, location, and driver details. Reports are sent directly to relevant traffic authorities.',
-    },
-    {
-      'q': 'Is my data secure?',
-      'a':
-          'All data is encrypted in transit and at rest. Your information is only shared with relevant traffic authorities and your insurance provider.',
-    },
-    {
-      'q': 'Do I need an internet connection?',
-      'a':
-          'An active internet connection is required to submit reports and track their status. You can draft a report offline, but submission requires connectivity.',
-    },
-    {
-      'q': 'Which types of accidents can I report?',
-      'a':
-          'Janneb supports minor and moderate vehicle accidents. For serious accidents with injuries, always call emergency services first.',
-    },
-  ];
-
-  static const List<Map<String, String>> _reportingFaqs = [
-    {
-      'q': 'How many photos should I take?',
-      'a':
-          'Take at least 4 photos per vehicle — front, rear, and both sides. Also capture license plates, visible damage close-up, and the surrounding road scene.',
-    },
-    {
-      'q': 'What if I can\'t confirm my location?',
-      'a':
-          'You can manually adjust the map pin or type a location description in the details field. Make sure GPS is enabled for best accuracy.',
-    },
-    {
-      'q': 'Can I edit a report after submitting?',
-      'a':
-          'Reports cannot be edited after submission. If corrections are needed, contact support through the app or call the helpline.',
-    },
-    {
-      'q': 'How long does report review take?',
-      'a':
-          'Most reports are reviewed within 45 minutes during business hours. You will receive a notification when the status changes.',
-    },
-  ];
-
-  List<Map<String, String>> get _displayedFaqs {
+  List<Map<String, String>> _displayedFaqs(AppLocalizations l10n) {
     switch (_selectedFilter) {
       case 'general':
-        return _generalFaqs;
+        return l10n.generalFaqs;
       case 'reporting':
-        return _reportingFaqs;
+        return l10n.reportingFaqs;
       default:
-        return [..._generalFaqs, ..._reportingFaqs];
+        return [...l10n.generalFaqs, ...l10n.reportingFaqs];
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final faqs = _displayedFaqs(l10n);
+
     return Scaffold(
       backgroundColor: AppColors.scaffoldBackground,
       appBar: AppBar(
@@ -85,9 +43,9 @@ class _FaqScreenState extends State<FaqScreen> {
           ),
           onPressed: () => context.pop(),
         ),
-        title: const Text(
-          'Frequently Asked Questions',
-          style: TextStyle(
+        title: Text(
+          l10n.faqPageTitle,
+          style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
@@ -98,7 +56,6 @@ class _FaqScreenState extends State<FaqScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Filter pills
             Padding(
               padding: const EdgeInsets.fromLTRB(
                 AppConstants.paddingScreen,
@@ -111,29 +68,27 @@ class _FaqScreenState extends State<FaqScreen> {
                 child: Row(
                   children: [
                     _FilterPill(
-                      label: 'All',
+                      label: l10n.filterAll,
                       isActive: _selectedFilter == 'all',
                       onTap: () => setState(() => _selectedFilter = 'all'),
                     ),
                     const SizedBox(width: AppConstants.spacingSm),
                     _FilterPill(
-                      label: 'General',
+                      label: l10n.filterGeneral,
                       isActive: _selectedFilter == 'general',
                       onTap: () => setState(() => _selectedFilter = 'general'),
                     ),
                     const SizedBox(width: AppConstants.spacingSm),
                     _FilterPill(
-                      label: 'Reporting',
+                      label: l10n.filterReporting,
                       isActive: _selectedFilter == 'reporting',
-                      onTap: () =>
-                          setState(() => _selectedFilter = 'reporting'),
+                      onTap: () => setState(() => _selectedFilter = 'reporting'),
                     ),
                   ],
                 ),
               ),
             ),
             const SizedBox(height: AppConstants.spacingMd),
-            // FAQ list
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(
@@ -142,7 +97,7 @@ class _FaqScreenState extends State<FaqScreen> {
                   AppConstants.paddingScreen,
                   AppConstants.spacingXl,
                 ),
-                children: _displayedFaqs
+                children: faqs
                     .map((faq) => _FaqTile(
                           question: faq['q']!,
                           answer: faq['a']!,

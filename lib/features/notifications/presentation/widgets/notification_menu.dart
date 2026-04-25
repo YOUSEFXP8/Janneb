@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/l10n/app_localizations.dart';
 import '../providers/notification_provider.dart';
 import '../../data/models/notification_item.dart';
 
@@ -21,6 +22,7 @@ class _NotificationSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final provider = context.watch<NotificationProvider>();
     final notifications = provider.notifications;
 
@@ -36,11 +38,11 @@ class _NotificationSheet extends StatelessWidget {
         child: Column(
           children: [
             _SheetHandle(),
-            _SheetHeader(hasUnread: provider.unreadCount > 0),
+            _SheetHeader(hasUnread: provider.unreadCount > 0, l10n: l10n),
             const Divider(height: 1, color: AppColors.border),
             Expanded(
               child: notifications.isEmpty
-                  ? const _EmptyState()
+                  ? _EmptyState(l10n: l10n)
                   : ListView.separated(
                       controller: controller,
                       padding: const EdgeInsets.symmetric(vertical: 8),
@@ -53,6 +55,7 @@ class _NotificationSheet extends StatelessWidget {
                       ),
                       itemBuilder: (ctx, i) => _NotificationTile(
                         item: notifications[i],
+                        l10n: l10n,
                         onTap: () {
                           context.read<NotificationProvider>().markAsRead(notifications[i].id);
                           Navigator.pop(ctx);
@@ -89,7 +92,8 @@ class _SheetHandle extends StatelessWidget {
 
 class _SheetHeader extends StatelessWidget {
   final bool hasUnread;
-  const _SheetHeader({required this.hasUnread});
+  final AppLocalizations l10n;
+  const _SheetHeader({required this.hasUnread, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -97,9 +101,9 @@ class _SheetHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(20, 4, 12, 12),
       child: Row(
         children: [
-          const Text(
-            'Notifications',
-            style: TextStyle(
+          Text(
+            l10n.notifications,
+            style: const TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.w700,
               color: AppColors.textPrimary,
@@ -115,9 +119,9 @@ class _SheetHeader extends StatelessWidget {
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
               ),
-              child: const Text(
-                'Mark all as read',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
+              child: Text(
+                l10n.markAllAsRead,
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
               ),
             ),
         ],
@@ -128,11 +132,13 @@ class _SheetHeader extends StatelessWidget {
 
 class _NotificationTile extends StatelessWidget {
   final NotificationItem item;
+  final AppLocalizations l10n;
   final VoidCallback onTap;
   final VoidCallback onDismissed;
 
   const _NotificationTile({
     required this.item,
+    required this.l10n,
     required this.onTap,
     required this.onDismissed,
   });
@@ -199,7 +205,7 @@ class _NotificationTile extends StatelessWidget {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        _formatTime(item.timestamp),
+                        _formatTime(item.timestamp, l10n),
                         style: const TextStyle(
                           fontSize: 11,
                           color: AppColors.textHint,
@@ -216,32 +222,33 @@ class _NotificationTile extends StatelessWidget {
     );
   }
 
-  String _formatTime(DateTime time) {
+  String _formatTime(DateTime time, AppLocalizations l10n) {
     final diff = DateTime.now().difference(time);
-    if (diff.inMinutes < 60) return '${diff.inMinutes} minutes ago';
-    if (diff.inHours < 24) return '${diff.inHours} hours ago';
-    return '${diff.inDays} days ago';
+    if (diff.inMinutes < 60) return l10n.minutesAgo(diff.inMinutes);
+    if (diff.inHours < 24) return l10n.hoursAgo(diff.inHours);
+    return l10n.daysAgo(diff.inDays);
   }
 }
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState();
+  final AppLocalizations l10n;
+  const _EmptyState({required this.l10n});
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
+          const Icon(
             Icons.notifications_none_rounded,
             size: 56,
             color: AppColors.textHint,
           ),
-          SizedBox(height: 12),
+          const SizedBox(height: 12),
           Text(
-            'No notifications',
-            style: TextStyle(
+            l10n.noNotifications,
+            style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w500,
               color: AppColors.textSecondary,

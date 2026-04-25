@@ -221,9 +221,6 @@ void main() {
         vehiclePlateNumber: 'ABC123',
         insuranceCompany: 'Test Insurance',
         accidentDescription: 'Minor fender bender',
-        accidentType: 'Collision',
-        weatherCondition: 'Clear',
-        injuriesReported: false,
       );
       expect(provider.fullName, 'John Doe');
       expect(provider.phoneNumber, '+962700000000');
@@ -241,9 +238,6 @@ void main() {
         vehiclePlateNumber: 'ABC',
         insuranceCompany: 'Ins',
         accidentDescription: 'Desc',
-        accidentType: 'Collision',
-        weatherCondition: 'Clear',
-        injuriesReported: false,
       );
 
       provider.resetReport();

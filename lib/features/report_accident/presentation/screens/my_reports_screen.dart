@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/l10n/app_localizations.dart';
 import '../../../../common/widgets/report_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/report_provider.dart';
@@ -29,9 +30,10 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('My Reports'),
+        title: Text(l10n.myReportsTitle),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.pop(),
@@ -49,7 +51,7 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.error_outline_rounded,
                       size: 64,
                       color: AppColors.textHint,
@@ -57,7 +59,7 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
                     const SizedBox(height: AppConstants.spacingMd),
                     Text(
                       provider.reportError!,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 16,
                         color: AppColors.textSecondary,
                       ),
@@ -75,15 +77,15 @@ class _MyReportsScreenState extends State<MyReportsScreen> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.description_outlined,
                       size: 64,
                       color: AppColors.textHint,
                     ),
                     const SizedBox(height: AppConstants.spacingMd),
                     Text(
-                      'No reports available',
-                      style: TextStyle(
+                      l10n.noReportsAvailable,
+                      style: const TextStyle(
                         fontSize: 16,
                         color: AppColors.textSecondary,
                         fontWeight: FontWeight.w500,

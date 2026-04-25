@@ -3,10 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/constants/app_strings.dart';
+import '../../../../core/l10n/app_localizations.dart';
 import '../../../../common/widgets/primary_button.dart';
 import '../../../../common/widgets/secondary_button.dart';
-import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/report_provider.dart';
 
 class SuccessScreen extends StatefulWidget {
@@ -57,6 +56,7 @@ class _SuccessScreenState extends State<SuccessScreen>
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -65,7 +65,6 @@ class _SuccessScreenState extends State<SuccessScreen>
             children: [
               const Spacer(flex: 2),
 
-              // Success Icon
               ScaleTransition(
                 scale: _scaleAnimation,
                 child: Container(
@@ -91,14 +90,13 @@ class _SuccessScreenState extends State<SuccessScreen>
               ),
               const SizedBox(height: AppConstants.spacingXl),
 
-              // Success Message
               FadeTransition(
                 opacity: _fadeAnimation,
                 child: Column(
                   children: [
-                    const Text(
-                      AppStrings.reportSubmitted,
-                      style: TextStyle(
+                    Text(
+                      l10n.reportSubmitted,
+                      style: const TextStyle(
                         fontSize: 24,
                         fontWeight: FontWeight.bold,
                         color: AppColors.textPrimary,
@@ -106,9 +104,9 @@ class _SuccessScreenState extends State<SuccessScreen>
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: AppConstants.spacingMd),
-                    const Text(
-                      AppStrings.successMessage,
-                      style: TextStyle(
+                    Text(
+                      l10n.successMessage,
+                      style: const TextStyle(
                         fontSize: 16,
                         color: AppColors.textSecondary,
                         height: 1.5,
@@ -117,7 +115,6 @@ class _SuccessScreenState extends State<SuccessScreen>
                     ),
                     const SizedBox(height: AppConstants.spacingLg),
 
-                    // Report Reference
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 24,
@@ -141,9 +138,9 @@ class _SuccessScreenState extends State<SuccessScreen>
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'Report Reference',
-                                style: TextStyle(
+                              Text(
+                                l10n.reportReference,
+                                style: const TextStyle(
                                   fontSize: 12,
                                   color: AppColors.textSecondary,
                                 ),
@@ -168,28 +165,21 @@ class _SuccessScreenState extends State<SuccessScreen>
 
               const Spacer(flex: 3),
 
-              // Bottom Buttons
               FadeTransition(
                 opacity: _fadeAnimation,
                 child: Column(
                   children: [
                     PrimaryButton(
-                      text: 'View Report',
+                      text: l10n.viewReport,
                       icon: Icons.description_rounded,
-                      onPressed: () async {
-                        final auth = context.read<AuthProvider>();
-                        final report = context.read<ReportProvider>();
-                        final nationalId = auth.nationalId ?? '';
-                        await report.fetchReports(nationalId);
-                        if (!mounted) return;
-                        report.resetReport();
-                        // ignore: use_build_context_synchronously
+                      onPressed: () {
+                        context.read<ReportProvider>().resetReport();
                         context.go('/my-reports');
                       },
                     ),
                     const SizedBox(height: AppConstants.spacingSm + 4),
                     SecondaryButton(
-                      text: AppStrings.returnHome,
+                      text: l10n.returnHome,
                       icon: Icons.home_rounded,
                       onPressed: () {
                         context.read<ReportProvider>().resetReport();

@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/l10n/app_localizations.dart';
 import '../../../../common/widgets/status_timeline_item.dart';
 import '../../../../common/widgets/summary_card.dart';
 import '../../../../common/widgets/primary_button.dart';
@@ -13,16 +14,14 @@ class ReportDetailsScreen extends StatelessWidget {
 
   const ReportDetailsScreen({super.key, required this.accidentId});
 
-  String _formatStatus(String status) {
+  String _formatStatus(String status, AppLocalizations l10n) {
     switch (status) {
       case 'REPORTED':
-        return 'Reported';
+        return l10n.statusReported;
       case 'UNDER_REVIEW':
-        return 'Under Review';
-      case 'OFFICER_ASSIGNED':
-        return 'Officer Assigned';
+        return l10n.statusUnderReview;
       case 'COMPLETED':
-        return 'Completed';
+        return l10n.statusCompleted;
       default:
         return status;
     }
@@ -30,34 +29,24 @@ class ReportDetailsScreen extends StatelessWidget {
 
   String _formatDate(DateTime date) {
     const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
     ];
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
 
-  // Helper inside to compute timeline logic mapping
   int _getStatusStep(String status) {
-    const steps = ['REPORTED', 'UNDER_REVIEW', 'OFFICER_ASSIGNED', 'COMPLETED'];
+    const steps = ['REPORTED', 'UNDER_REVIEW', 'COMPLETED'];
     final index = steps.indexOf(status);
     return index == -1 ? 0 : index;
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Report Status'),
+        title: Text(l10n.reportStatus),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.pop(),
@@ -84,7 +73,7 @@ class ReportDetailsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: AppConstants.spacingLg),
                   SummaryCard(
-                    status: _formatStatus(report.status),
+                    status: _formatStatus(report.status, l10n),
                     latitude: report.latitude,
                     longitude: report.longitude,
                     date: _formatDate(report.date),
@@ -96,34 +85,28 @@ class ReportDetailsScreen extends StatelessWidget {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           StatusTimelineItem(
-                            title: 'Report Submitted',
-                            subtitle: 'Report details received',
+                            title: l10n.timelineReportSubmitted,
+                            subtitle: l10n.timelineReportReceived,
                             isCompleted: currentStepIndex > 0,
                             isCurrent: currentStepIndex == 0,
                           ),
                           StatusTimelineItem(
-                            title: 'Under Review',
-                            subtitle: 'Traffic authority reviewing',
+                            title: l10n.timelineUnderReview,
+                            subtitle: l10n.timelineTrafficReviewing,
                             isCompleted: currentStepIndex > 1,
                             isCurrent: currentStepIndex == 1,
                           ),
                           StatusTimelineItem(
-                            title: 'Officer Assigned',
-                            subtitle: 'An officer is handling the case',
-                            isCompleted: currentStepIndex > 2,
+                            title: l10n.timelineCaseCompleted,
+                            subtitle: l10n.timelineFinalReport,
+                            isCompleted: currentStepIndex >= 2,
                             isCurrent: currentStepIndex == 2,
-                          ),
-                          StatusTimelineItem(
-                            title: 'Case Completed',
-                            subtitle: 'Final report has been issued',
-                            isCompleted: currentStepIndex >= 3,
-                            isCurrent: currentStepIndex == 3,
                             isLast: true,
                           ),
                           const SizedBox(height: AppConstants.spacingXl),
-                          const Text(
-                            'Expected completion: 45 minutes',
-                            style: TextStyle(
+                          Text(
+                            l10n.expectedCompletion,
+                            style: const TextStyle(
                               color: AppColors.textSecondary,
                               fontSize: 14,
                             ),
@@ -134,12 +117,12 @@ class ReportDetailsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: AppConstants.spacingLg),
                   PrimaryButton(
-                    text: 'Download Final Report (PDF)',
+                    text: l10n.downloadReport,
                     onPressed: report.officerReportUrl != null
                         ? () {
                             ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('PDF download coming soon'),
+                              SnackBar(
+                                content: Text(l10n.pdfComingSoon),
                                 behavior: SnackBarBehavior.floating,
                               ),
                             );

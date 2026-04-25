@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:provider/provider.dart';
+import '../../../../core/l10n/app_localizations.dart';
 import '../providers/report_provider.dart';
 
 class QrScannerScreen extends StatefulWidget {
@@ -35,9 +36,10 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Scan QR Code'),
+        title: Text(l10n.scanQrCode),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.pop(),
@@ -47,16 +49,14 @@ class _QrScannerScreenState extends State<QrScannerScreen> {
         children: [
           MobileScanner(onDetect: _onDetect),
           if (_isProcessing) const Center(child: CircularProgressIndicator()),
-
-          // Basic overlay to guide user
           Positioned(
             bottom: 40,
             left: 0,
             right: 0,
-            child: const Text(
-              'Position the QR code within the view.',
+            child: Text(
+              l10n.positionQrCode,
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 color: Colors.white,
                 fontSize: 16,
                 fontWeight: FontWeight.bold,

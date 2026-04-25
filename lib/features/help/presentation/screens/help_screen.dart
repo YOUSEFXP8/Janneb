@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/l10n/app_localizations.dart';
 import '../widgets/topic_card.dart';
 
 class _TopicData {
@@ -17,33 +18,6 @@ class _TopicData {
   final String subtitle;
   final String routeId;
 }
-
-const List<_TopicData> _allTopics = [
-  _TopicData(
-    icon: Icons.directions_car_rounded,
-    title: 'Accident reporting',
-    subtitle: 'Full reporting guide',
-    routeId: 'accident-reporting',
-  ),
-  _TopicData(
-    icon: Icons.camera_alt_rounded,
-    title: 'Photos & evidence',
-    subtitle: 'What to capture',
-    routeId: 'photos-evidence',
-  ),
-  _TopicData(
-    icon: Icons.location_on_rounded,
-    title: 'Location & maps',
-    subtitle: 'GPS and manual input',
-    routeId: 'location-maps',
-  ),
-  _TopicData(
-    icon: Icons.schedule_rounded,
-    title: 'After submission',
-    subtitle: 'Tracking your report',
-    routeId: 'after-submission',
-  ),
-];
 
 class HelpScreen extends StatefulWidget {
   const HelpScreen({super.key});
@@ -70,10 +44,38 @@ class _HelpScreenState extends State<HelpScreen> {
     super.dispose();
   }
 
-  List<_TopicData> get _filteredTopics {
-    if (_searchQuery.isEmpty) return _allTopics;
+  List<_TopicData> _allTopics(AppLocalizations l10n) => [
+        _TopicData(
+          icon: Icons.directions_car_rounded,
+          title: l10n.topicAccidentReporting,
+          subtitle: l10n.topicAccidentReportingDesc,
+          routeId: 'accident-reporting',
+        ),
+        _TopicData(
+          icon: Icons.camera_alt_rounded,
+          title: l10n.topicPhotosEvidence,
+          subtitle: l10n.topicPhotosEvidenceDesc,
+          routeId: 'photos-evidence',
+        ),
+        _TopicData(
+          icon: Icons.location_on_rounded,
+          title: l10n.topicLocationMaps,
+          subtitle: l10n.topicLocationMapsDesc,
+          routeId: 'location-maps',
+        ),
+        _TopicData(
+          icon: Icons.schedule_rounded,
+          title: l10n.topicAfterSubmission,
+          subtitle: l10n.topicAfterSubmissionDesc,
+          routeId: 'after-submission',
+        ),
+      ];
+
+  List<_TopicData> _filteredTopics(AppLocalizations l10n) {
+    final topics = _allTopics(l10n);
+    if (_searchQuery.isEmpty) return topics;
     final q = _searchQuery.toLowerCase();
-    return _allTopics
+    return topics
         .where(
           (t) =>
               t.title.toLowerCase().contains(q) ||
@@ -84,6 +86,9 @@ class _HelpScreenState extends State<HelpScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
+    final filtered = _filteredTopics(l10n);
+
     return Scaffold(
       backgroundColor: AppColors.scaffoldBackground,
       appBar: AppBar(
@@ -97,9 +102,9 @@ class _HelpScreenState extends State<HelpScreen> {
           ),
           onPressed: () => context.pop(),
         ),
-        title: const Text(
-          'Help & Guide',
-          style: TextStyle(
+        title: Text(
+          l10n.helpGuide,
+          style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
@@ -115,11 +120,10 @@ class _HelpScreenState extends State<HelpScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Search bar
               TextField(
                 controller: _searchController,
                 decoration: InputDecoration(
-                  hintText: 'Search topics...',
+                  hintText: l10n.searchTopics,
                   hintStyle: const TextStyle(
                     color: AppColors.textHint,
                     fontSize: 15,
@@ -160,7 +164,6 @@ class _HelpScreenState extends State<HelpScreen> {
               ),
               const SizedBox(height: AppConstants.spacingLg),
 
-              // Blue banner card
               GestureDetector(
                 onTap: () => context.push('/help/guide'),
                 child: Container(
@@ -176,7 +179,7 @@ class _HelpScreenState extends State<HelpScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'STEP-BY-STEP GUIDE',
+                        l10n.stepByStepGuide,
                         style: TextStyle(
                           fontSize: 11,
                           fontWeight: FontWeight.w600,
@@ -185,9 +188,9 @@ class _HelpScreenState extends State<HelpScreen> {
                         ),
                       ),
                       const SizedBox(height: AppConstants.spacingSm),
-                      const Text(
-                        'How to report your accident',
-                        style: TextStyle(
+                      Text(
+                        l10n.howToReportAccident,
+                        style: const TextStyle(
                           fontSize: 20,
                           fontWeight: FontWeight.bold,
                           color: Colors.white,
@@ -196,7 +199,7 @@ class _HelpScreenState extends State<HelpScreen> {
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        '6 simple steps, takes under 5 minutes',
+                        l10n.sixStepsDesc,
                         style: TextStyle(
                           fontSize: 13,
                           color: Colors.white.withValues(alpha: 0.80),
@@ -221,9 +224,9 @@ class _HelpScreenState extends State<HelpScreen> {
                                 ),
                               ),
                             ),
-                            child: const Text(
-                              'Start guide  →',
-                              style: TextStyle(
+                            child: Text(
+                              l10n.startGuide,
+                              style: const TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -243,10 +246,9 @@ class _HelpScreenState extends State<HelpScreen> {
               ),
               const SizedBox(height: AppConstants.spacingLg),
 
-              // Browse Topics label
-              const Text(
-                'BROWSE TOPICS',
-                style: TextStyle(
+              Text(
+                l10n.browseTopics,
+                style: const TextStyle(
                   fontSize: 11,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textSecondary,
@@ -255,15 +257,14 @@ class _HelpScreenState extends State<HelpScreen> {
               ),
               const SizedBox(height: AppConstants.spacingMd),
 
-              // 2×2 topic grid
-              if (_filteredTopics.isEmpty)
+              if (filtered.isEmpty)
                 Padding(
                   padding: const EdgeInsets.symmetric(
                     vertical: AppConstants.spacingLg,
                   ),
                   child: Center(
                     child: Text(
-                      'No topics match "$_searchQuery"',
+                      l10n.noTopicsMatch(_searchQuery),
                       style: const TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 14,
@@ -279,7 +280,7 @@ class _HelpScreenState extends State<HelpScreen> {
                   crossAxisSpacing: 12,
                   mainAxisSpacing: 12,
                   childAspectRatio: 1.3,
-                  children: _filteredTopics
+                  children: filtered
                       .map(
                         (t) => TopicCard(
                           icon: t.icon,
@@ -292,7 +293,6 @@ class _HelpScreenState extends State<HelpScreen> {
                 ),
               const SizedBox(height: AppConstants.spacingLg),
 
-              // Emergency card
               Container(
                 padding: const EdgeInsets.all(AppConstants.paddingCard),
                 decoration: BoxDecoration(
@@ -315,22 +315,22 @@ class _HelpScreenState extends State<HelpScreen> {
                       ),
                     ),
                     const SizedBox(width: AppConstants.spacingMd),
-                    const Expanded(
+                    Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Need immediate help?',
-                            style: TextStyle(
+                            l10n.needImmediateHelp,
+                            style: const TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w600,
                               color: AppColors.textPrimary,
                             ),
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
-                            'Call emergency services',
-                            style: TextStyle(
+                            l10n.callEmergencyServices,
+                            style: const TextStyle(
                               fontSize: 12,
                               color: AppColors.textSecondary,
                             ),
@@ -340,9 +340,9 @@ class _HelpScreenState extends State<HelpScreen> {
                     ),
                     GestureDetector(
                       onTap: () => context.push('/emergency'),
-                      child: const Text(
-                        'Call now  >',
-                        style: TextStyle(
+                      child: Text(
+                        l10n.callNow,
+                        style: const TextStyle(
                           fontSize: 14,
                           fontWeight: FontWeight.w600,
                           color: AppColors.error,
@@ -354,7 +354,6 @@ class _HelpScreenState extends State<HelpScreen> {
               ),
               const SizedBox(height: AppConstants.spacingMd),
 
-              // FAQ row
               GestureDetector(
                 onTap: () => context.push('/help/faq'),
                 child: Container(
@@ -364,24 +363,24 @@ class _HelpScreenState extends State<HelpScreen> {
                     borderRadius: BorderRadius.circular(AppConstants.borderRadius),
                     border: Border.all(color: AppColors.border),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
-                              'Frequently asked questions',
-                              style: TextStyle(
+                              l10n.faqTitle,
+                              style: const TextStyle(
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.textPrimary,
                               ),
                             ),
-                            SizedBox(height: 2),
+                            const SizedBox(height: 2),
                             Text(
-                              'Common issues & answers',
-                              style: TextStyle(
+                              l10n.faqSubtitle,
+                              style: const TextStyle(
                                 fontSize: 12,
                                 color: AppColors.textSecondary,
                               ),
@@ -389,7 +388,7 @@ class _HelpScreenState extends State<HelpScreen> {
                           ],
                         ),
                       ),
-                      Icon(
+                      const Icon(
                         Icons.chevron_right_rounded,
                         color: AppColors.textSecondary,
                         size: 22,

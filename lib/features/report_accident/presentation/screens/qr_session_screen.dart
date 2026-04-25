@@ -6,6 +6,8 @@ import 'package:qr_flutter/qr_flutter.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/l10n/app_localizations.dart';
+import '../../../../core/providers/locale_provider.dart';
 import '../../../../common/widgets/primary_button.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../providers/report_provider.dart';
@@ -34,11 +36,11 @@ class _QrSessionScreenState extends State<QrSessionScreen> {
   ) async {
     if (!(_joinFormKey.currentState?.validate() ?? false)) return;
 
-    // Use the first registered car, or empty string if none.
     final carId = auth.cars.isNotEmpty
         ? (auth.cars.first['car_registration_id'] as String? ?? '')
         : '';
 
+    final isAr = context.read<LocaleProvider>().isArabic;
     try {
       await provider.joinAccident(
         joinCode: _joinCodeController.text.trim(),
@@ -48,33 +50,33 @@ class _QrSessionScreenState extends State<QrSessionScreen> {
       if (context.mounted) context.push('/report/capture-evidence');
     } on PostgrestException catch (e) {
       if (!context.mounted) return;
+      final l10n = AppLocalizations(isAr);
       final lower = e.message.toLowerCase();
       final msg = lower.contains('invalid')
-          ? 'Invalid join code'
+          ? l10n.invalidJoinCode
           : lower.contains('already')
-              ? 'You are already linked to this accident'
-              : 'Failed to join session';
+              ? l10n.alreadyLinked
+              : l10n.failedToJoin;
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
     } catch (_) {
       if (context.mounted) {
+        final l10n = AppLocalizations(isAr);
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to join session')),
+          SnackBar(content: Text(l10n.failedToJoin)),
         );
       }
     }
   }
 
-  Widget _buildOrDivider() {
+  Widget _buildOrDivider(AppLocalizations l10n) {
     return Row(
       children: [
         const Expanded(child: Divider()),
         Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppConstants.spacingMd,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: AppConstants.spacingMd),
           child: Text(
-            'OR',
-            style: TextStyle(
+            l10n.or,
+            style: const TextStyle(
               color: AppColors.textSecondary,
               fontWeight: FontWeight.bold,
             ),
@@ -87,6 +89,7 @@ class _QrSessionScreenState extends State<QrSessionScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final auth = context.watch<AuthProvider>();
 
     return Consumer<ReportProvider>(
@@ -104,7 +107,7 @@ class _QrSessionScreenState extends State<QrSessionScreen> {
                 context.pop();
               },
             ),
-            title: const Text('Accident Session'),
+            title: Text(l10n.accidentSession),
           ),
           body: SafeArea(
             child: SingleChildScrollView(
@@ -112,9 +115,9 @@ class _QrSessionScreenState extends State<QrSessionScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  const Text(
-                    'Create a new session code to share with the other party, or scan/enter their code to join.',
-                    style: TextStyle(
+                  Text(
+                    l10n.createSessionDesc,
+                    style: const TextStyle(
                       fontSize: 16,
                       color: AppColors.textSecondary,
                     ),
@@ -123,7 +126,6 @@ class _QrSessionScreenState extends State<QrSessionScreen> {
                   const SizedBox(height: AppConstants.spacingXl),
 
                   if (provider.sessionId != null) ...[
-                    // ── SESSION CREATED VIEW ──────────────────────────────
                     Center(
                       child: QrImageView(
                         data: provider.sessionId!,
@@ -133,13 +135,9 @@ class _QrSessionScreenState extends State<QrSessionScreen> {
                       ),
                     ),
                     const SizedBox(height: AppConstants.spacingLg),
-
-                    // Plain-text code for manual sharing
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 24,
-                        vertical: 14,
-                      ),
+                          horizontal: 24, vertical: 14),
                       decoration: BoxDecoration(
                         color: AppColors.accentLight,
                         borderRadius:
@@ -152,9 +150,9 @@ class _QrSessionScreenState extends State<QrSessionScreen> {
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              const Text(
-                                'Join Code',
-                                style: TextStyle(
+                              Text(
+                                l10n.joinCode,
+                                style: const TextStyle(
                                   fontSize: 12,
                                   color: AppColors.textSecondary,
                                 ),
@@ -173,15 +171,14 @@ class _QrSessionScreenState extends State<QrSessionScreen> {
                           IconButton(
                             icon: const Icon(Icons.copy_rounded,
                                 color: AppColors.primary),
-                            tooltip: 'Copy code',
+                            tooltip: l10n.copyCode,
                             onPressed: () {
                               Clipboard.setData(
-                                ClipboardData(text: provider.sessionId!),
-                              );
+                                  ClipboardData(text: provider.sessionId!));
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Code copied to clipboard'),
-                                  duration: Duration(seconds: 2),
+                                SnackBar(
+                                  content: Text(l10n.codeCopied),
+                                  duration: const Duration(seconds: 2),
                                 ),
                               );
                             },
@@ -190,50 +187,46 @@ class _QrSessionScreenState extends State<QrSessionScreen> {
                       ),
                     ),
                     const SizedBox(height: AppConstants.spacingMd),
-                    const Text(
-                      'Share this QR code or the join code with the other driver.',
+                    Text(
+                      l10n.shareQrDesc,
                       textAlign: TextAlign.center,
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 14,
                         color: AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: AppConstants.spacingLg),
                     PrimaryButton(
-                      text: 'Continue to Evidence',
-                      onPressed: () {
-                        context.push('/report/capture-evidence');
-                      },
+                      text: l10n.continueToEvidence,
+                      onPressed: () => context.push('/report/capture-evidence'),
                     ),
                   ] else ...[
-                    // ── DEFAULT STATE ─────────────────────────────────────
                     if (provider.isLoading)
                       const Center(child: CircularProgressIndicator())
                     else ...[
                       PrimaryButton(
-                        text: 'Create Session',
+                        text: l10n.createSession,
                         onPressed: () async {
+                          final isAr =
+                              context.read<LocaleProvider>().isArabic;
                           try {
                             await provider.createSession();
                           } catch (_) {
                             if (context.mounted) {
                               ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('Failed to create session'),
-                                ),
+                                SnackBar(
+                                    content: Text(
+                                        AppLocalizations(isAr).failedToCreate)),
                               );
                             }
                           }
                         },
                       ),
                       const SizedBox(height: AppConstants.spacingLg),
-                      _buildOrDivider(),
+                      _buildOrDivider(l10n),
                       const SizedBox(height: AppConstants.spacingLg),
-
-                      // ── JOIN SECTION ──────────────────────────────────
                       Container(
-                        padding:
-                            const EdgeInsets.all(AppConstants.paddingCard),
+                        padding: const EdgeInsets.all(AppConstants.paddingCard),
                         decoration: BoxDecoration(
                           color: AppColors.background,
                           borderRadius: BorderRadius.circular(
@@ -245,9 +238,9 @@ class _QrSessionScreenState extends State<QrSessionScreen> {
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.stretch,
                             children: [
-                              const Text(
-                                'Join an Accident Session',
-                                style: TextStyle(
+                              Text(
+                                l10n.joinAccidentSession,
+                                style: const TextStyle(
                                   fontSize: 15,
                                   fontWeight: FontWeight.w600,
                                   color: AppColors.textPrimary,
@@ -256,42 +249,38 @@ class _QrSessionScreenState extends State<QrSessionScreen> {
                               const SizedBox(height: AppConstants.spacingMd),
                               OutlinedButton.icon(
                                 style: OutlinedButton.styleFrom(
-                                  minimumSize:
-                                      const Size(double.infinity, 52),
+                                  minimumSize: const Size(double.infinity, 52),
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
                                 onPressed: () =>
                                     context.push('/report/qr-scanner'),
-                                icon: const Icon(
-                                    Icons.qr_code_scanner_rounded),
-                                label: const Text('Scan QR Code'),
+                                icon: const Icon(Icons.qr_code_scanner_rounded),
+                                label: Text(l10n.scanQrCode),
                               ),
                               const SizedBox(height: AppConstants.spacingMd),
-                              _buildOrDivider(),
+                              _buildOrDivider(l10n),
                               const SizedBox(height: AppConstants.spacingMd),
                               TextFormField(
                                 controller: _joinCodeController,
                                 keyboardType: TextInputType.number,
                                 decoration: InputDecoration(
-                                  labelText: 'Enter join code',
-                                  hintText: 'e.g. 847291',
-                                  prefixIcon:
-                                      const Icon(Icons.pin_rounded),
+                                  labelText: l10n.enterJoinCode,
+                                  hintText: l10n.joinCodeHint,
+                                  prefixIcon: const Icon(Icons.pin_rounded),
                                   border: OutlineInputBorder(
-                                    borderRadius:
-                                        BorderRadius.circular(12),
+                                    borderRadius: BorderRadius.circular(12),
                                   ),
                                 ),
                                 validator: (v) =>
                                     (v == null || v.trim().isEmpty)
-                                        ? 'Please enter a join code'
+                                        ? l10n.enterJoinCodeValidation
                                         : null,
                               ),
                               const SizedBox(height: AppConstants.spacingLg),
                               PrimaryButton(
-                                text: 'Join Session',
+                                text: l10n.joinSession,
                                 onPressed: provider.isLoading
                                     ? null
                                     : () => _submitManualJoin(

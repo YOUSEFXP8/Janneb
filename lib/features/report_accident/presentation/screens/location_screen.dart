@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/constants/app_strings.dart';
+import '../../../../core/l10n/app_localizations.dart';
 import '../../../../common/widgets/primary_button.dart';
 import '../../../../common/widgets/secondary_button.dart';
 import '../providers/report_provider.dart';
@@ -22,7 +22,6 @@ class _LocationScreenState extends State<LocationScreen> {
   @override
   void initState() {
     super.initState();
-    // Auto-fetch GPS when the screen opens
     WidgetsBinding.instance.addPostFrameCallback((_) => _getCurrentLocation());
   }
 
@@ -36,8 +35,9 @@ class _LocationScreenState extends State<LocationScreen> {
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
         if (mounted) {
+          final l10n = AppLocalizations.of(context);
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Location permission required')),
+            SnackBar(content: Text(l10n.locationPermissionRequired)),
           );
         }
         return;
@@ -45,15 +45,16 @@ class _LocationScreenState extends State<LocationScreen> {
       final position = await Geolocator.getCurrentPosition();
       if (mounted) {
         context.read<ReportProvider>().setGpsCoordinates(
-              position.latitude,
-              position.longitude,
-            );
+          position.latitude,
+          position.longitude,
+        );
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to get location')),
-        );
+        final l10n = AppLocalizations.of(context);
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(l10n.failedToGetLocation)));
       }
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -62,13 +63,14 @@ class _LocationScreenState extends State<LocationScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.pop(),
         ),
-        title: const Text(AppStrings.accidentLocation),
+        title: Text(l10n.accidentLocation),
       ),
       body: SafeArea(
         child: Column(
@@ -79,16 +81,15 @@ class _LocationScreenState extends State<LocationScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      AppStrings.locationSubtitle,
-                      style: TextStyle(
+                    Text(
+                      l10n.confirmLocationSubtitle,
+                      style: const TextStyle(
                         fontSize: 15,
                         color: AppColors.textSecondary,
                       ),
                     ),
                     const SizedBox(height: AppConstants.spacingLg),
 
-                    // Map Placeholder
                     Container(
                       width: double.infinity,
                       height: 300,
@@ -147,9 +148,9 @@ class _LocationScreenState extends State<LocationScreen> {
                                     ),
                                   ],
                                 ),
-                                child: const Text(
-                                  'Map will be integrated later',
-                                  style: TextStyle(
+                                child: Text(
+                                  l10n.mapPlaceholder,
+                                  style: const TextStyle(
                                     fontSize: 12,
                                     color: AppColors.textSecondary,
                                     fontWeight: FontWeight.w500,
@@ -163,7 +164,6 @@ class _LocationScreenState extends State<LocationScreen> {
                     ),
                     const SizedBox(height: AppConstants.spacingLg),
 
-                    // Location Info Card
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.all(AppConstants.paddingCard),
@@ -198,9 +198,9 @@ class _LocationScreenState extends State<LocationScreen> {
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
-                                    const Text(
-                                      AppStrings.currentLocation,
-                                      style: TextStyle(
+                                    Text(
+                                      l10n.currentLocation,
+                                      style: const TextStyle(
                                         fontSize: 12,
                                         color: AppColors.textSecondary,
                                         fontWeight: FontWeight.w500,
@@ -246,7 +246,6 @@ class _LocationScreenState extends State<LocationScreen> {
               ),
             ),
 
-            // Bottom Buttons
             Padding(
               padding: const EdgeInsets.all(AppConstants.paddingScreen),
               child: Column(
@@ -258,11 +257,12 @@ class _LocationScreenState extends State<LocationScreen> {
                     )
                   else
                     Consumer<ReportProvider>(
-                      builder: (context, provider, _) => provider.latitude != null
+                      builder: (context, provider, _) =>
+                          provider.latitude != null
                           ? OutlinedButton.icon(
                               onPressed: _getCurrentLocation,
                               icon: const Icon(Icons.refresh_rounded, size: 18),
-                              label: const Text('Refresh Location'),
+                              label: Text(l10n.refreshLocation),
                               style: OutlinedButton.styleFrom(
                                 minimumSize: const Size(double.infinity, 48),
                                 shape: RoundedRectangleBorder(
@@ -273,25 +273,19 @@ class _LocationScreenState extends State<LocationScreen> {
                               ),
                             )
                           : PrimaryButton(
-                              text: 'Get Current Location',
+                              text: l10n.getCurrentLocation,
                               icon: Icons.my_location_rounded,
                               onPressed: _getCurrentLocation,
                             ),
                     ),
                   const SizedBox(height: AppConstants.spacingSm + 4),
                   PrimaryButton(
-                    text: AppStrings.confirmLocation,
+                    text: l10n.confirmLocation,
                     icon: Icons.check_circle_outline_rounded,
                     onPressed: () {
                       context.read<ReportProvider>().confirmLocation();
                       context.push('/report/driver-details');
                     },
-                  ),
-                  const SizedBox(height: AppConstants.spacingSm + 4),
-                  SecondaryButton(
-                    text: AppStrings.adjustLocation,
-                    icon: Icons.edit_location_alt_rounded,
-                    onPressed: () {},
                   ),
                 ],
               ),

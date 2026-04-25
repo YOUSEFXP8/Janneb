@@ -5,7 +5,7 @@ import 'package:image_picker/image_picker.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/constants/app_strings.dart';
+import '../../../../core/l10n/app_localizations.dart';
 import '../../../../common/widgets/primary_button.dart';
 import '../providers/report_provider.dart';
 
@@ -31,17 +31,18 @@ class _CaptureEvidenceScreenState extends State<CaptureEvidenceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.pop(),
         ),
-        title: const Text(AppStrings.captureEvidence),
+        title: Text(l10n.captureEvidence),
         actions: [
           TextButton(
             onPressed: () => context.push('/report/location'),
-            child: const Text('Skip'),
+            child: Text(l10n.skip),
           ),
         ],
       ),
@@ -56,20 +57,19 @@ class _CaptureEvidenceScreenState extends State<CaptureEvidenceScreen> {
                     return Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          AppStrings.captureEvidenceSubtitle,
-                          style: TextStyle(
+                        Text(
+                          l10n.takePhotosDesc,
+                          style: const TextStyle(
                             fontSize: 15,
                             color: AppColors.textSecondary,
                           ),
                         ),
                         const SizedBox(height: AppConstants.spacingLg),
 
-                        // Take Photo Button
                         ElevatedButton.icon(
                           onPressed: () => _captureFromCamera(provider),
                           icon: const Icon(Icons.camera_alt_rounded, size: 22),
-                          label: const Text('Take Photo'),
+                          label: Text(l10n.takePhoto),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: AppColors.primary,
                             foregroundColor: Colors.white,
@@ -83,7 +83,6 @@ class _CaptureEvidenceScreenState extends State<CaptureEvidenceScreen> {
                         ),
                         const SizedBox(height: AppConstants.spacingMd),
 
-                        // Capture and Gallery Buttons
                         Row(
                           children: [
                             Expanded(
@@ -93,7 +92,7 @@ class _CaptureEvidenceScreenState extends State<CaptureEvidenceScreen> {
                                   Icons.camera_alt_rounded,
                                   size: 20,
                                 ),
-                                label: const Text(AppStrings.capturePhoto),
+                                label: Text(l10n.capturePhoto),
                                 style: ElevatedButton.styleFrom(
                                   backgroundColor: AppColors.primary,
                                   foregroundColor: Colors.white,
@@ -114,7 +113,7 @@ class _CaptureEvidenceScreenState extends State<CaptureEvidenceScreen> {
                                   Icons.photo_library_rounded,
                                   size: 20,
                                 ),
-                                label: const Text(AppStrings.gallery),
+                                label: Text(l10n.gallery),
                                 style: OutlinedButton.styleFrom(
                                   foregroundColor: AppColors.primary,
                                   minimumSize: const Size(0, 48),
@@ -134,10 +133,9 @@ class _CaptureEvidenceScreenState extends State<CaptureEvidenceScreen> {
                         ),
                         const SizedBox(height: AppConstants.spacingLg),
 
-                        // Photos Grid
                         if (provider.images.isNotEmpty) ...[
                           Text(
-                            '${AppStrings.photosCaptured} (${provider.images.length})',
+                            '${l10n.photosCaptured} (${provider.images.length})',
                             style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w600,
@@ -202,7 +200,6 @@ class _CaptureEvidenceScreenState extends State<CaptureEvidenceScreen> {
               ),
             ),
 
-            // Bottom Button
             Consumer<ReportProvider>(
               builder: (context, provider, _) {
                 final count = provider.images.length;
@@ -216,7 +213,6 @@ class _CaptureEvidenceScreenState extends State<CaptureEvidenceScreen> {
                   ),
                   child: Column(
                     children: [
-                      // Progress indicator
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: List.generate(2, (i) {
@@ -237,8 +233,8 @@ class _CaptureEvidenceScreenState extends State<CaptureEvidenceScreen> {
                       const SizedBox(height: 8),
                       Text(
                         canContinue
-                            ? '$count photo${count == 1 ? '' : 's'} captured'
-                            : '$count / 2 required photos',
+                            ? l10n.photosCapturedCount(count)
+                            : l10n.photosProgress(count),
                         style: TextStyle(
                           fontSize: 13,
                           color: canContinue
@@ -249,7 +245,7 @@ class _CaptureEvidenceScreenState extends State<CaptureEvidenceScreen> {
                       ),
                       const SizedBox(height: 12),
                       PrimaryButton(
-                        text: AppStrings.continueText,
+                        text: l10n.continueText,
                         onPressed: canContinue
                             ? () => context.push('/report/location')
                             : null,

@@ -5,6 +5,7 @@ import 'package:uuid/uuid.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/l10n/app_localizations.dart';
 import '../../../../common/widgets/primary_button.dart';
 import '../../../../common/widgets/custom_text_field.dart';
 import '../providers/auth_provider.dart';
@@ -65,7 +66,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
     final success = await auth.addCar(data);
     if (!mounted) return;
     if (success) {
-      context.pop();
+      context.go('/cars');
     } else if (auth.error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(auth.error!), backgroundColor: AppColors.error),
@@ -75,6 +76,7 @@ class _AddCarScreenState extends State<AddCarScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final isLoading = context.select<AuthProvider, bool>((a) => a.isLoading);
 
     return Scaffold(
@@ -85,9 +87,9 @@ class _AddCarScreenState extends State<AddCarScreen> {
           icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: const Text(
-          'Add Vehicle',
-          style: TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.addVehicle,
+          style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
         ),
       ),
       body: SafeArea(
@@ -98,96 +100,96 @@ class _AddCarScreenState extends State<AddCarScreen> {
             child: Column(
               children: [
                 CustomTextField(
-                  label: 'VIN Number',
-                  hint: 'Enter vehicle identification number',
+                  label: l10n.vinNumber,
+                  hint: l10n.enterVin,
                   controller: _vinController,
                   prefixIcon: Icons.numbers_rounded,
-                  validator: (v) => Validators.required(v, 'VIN number'),
+                  validator: (v) => Validators.required(v, l10n.vinNumber),
                   textInputAction: TextInputAction.next,
                 ),
                 const SizedBox(height: AppConstants.spacingMd),
                 CustomTextField(
-                  label: 'Plate Number',
-                  hint: 'Enter plate number',
+                  label: l10n.plateNumber,
+                  hint: l10n.enterPlate,
                   controller: _plateController,
                   prefixIcon: Icons.credit_card_rounded,
-                  validator: (v) => Validators.required(v, 'Plate number'),
+                  validator: (v) => Validators.required(v, l10n.plateNumber),
                   textInputAction: TextInputAction.next,
                 ),
                 const SizedBox(height: AppConstants.spacingMd),
                 CustomTextField(
-                  label: 'Manufacturer',
-                  hint: 'e.g. Toyota, Honda',
+                  label: l10n.manufacturer,
+                  hint: l10n.manufacturerHint,
                   controller: _manufacturerController,
                   prefixIcon: Icons.factory_rounded,
-                  validator: (v) => Validators.required(v, 'Manufacturer'),
+                  validator: (v) => Validators.required(v, l10n.manufacturer),
                   textInputAction: TextInputAction.next,
                 ),
                 const SizedBox(height: AppConstants.spacingMd),
                 CustomTextField(
-                  label: 'Color',
-                  hint: 'e.g. White, Black',
+                  label: l10n.color,
+                  hint: l10n.colorHint,
                   controller: _colorController,
                   prefixIcon: Icons.color_lens_rounded,
-                  validator: (v) => Validators.required(v, 'Color'),
+                  validator: (v) => Validators.required(v, l10n.color),
                   textInputAction: TextInputAction.next,
                 ),
                 const SizedBox(height: AppConstants.spacingMd),
                 CustomTextField(
-                  label: 'Registration Type',
-                  hint: 'e.g. Private, Commercial',
+                  label: l10n.registrationType,
+                  hint: l10n.registrationTypeHint,
                   controller: _regTypeController,
                   prefixIcon: Icons.description_rounded,
-                  validator: (v) => Validators.required(v, 'Registration type'),
+                  validator: (v) => Validators.required(v, l10n.registrationType),
                   textInputAction: TextInputAction.next,
                 ),
                 const SizedBox(height: AppConstants.spacingMd),
                 CustomTextField(
-                  label: 'Car Type',
-                  hint: 'e.g. Sedan, SUV, Truck',
+                  label: l10n.carType,
+                  hint: l10n.carTypeHint,
                   controller: _carTypeController,
                   prefixIcon: Icons.directions_car_rounded,
-                  validator: (v) => Validators.required(v, 'Car type'),
+                  validator: (v) => Validators.required(v, l10n.carType),
                   textInputAction: TextInputAction.next,
                 ),
                 const SizedBox(height: AppConstants.spacingMd),
                 CustomTextField(
-                  label: 'Year',
-                  hint: 'e.g. 2022',
+                  label: l10n.year,
+                  hint: l10n.yearHint,
                   controller: _yearController,
                   keyboardType: TextInputType.number,
                   prefixIcon: Icons.calendar_month_rounded,
                   textInputAction: TextInputAction.next,
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'Year is required';
-                    final year = int.tryParse(v.trim());
-                    if (year == null || year < 1900 || year > DateTime.now().year + 1) {
-                      return 'Please enter a valid year';
+                    if (v == null || v.trim().isEmpty) return Validators.required(v, l10n.year);
+                    final yr = int.tryParse(v.trim());
+                    if (yr == null || yr < 1900 || yr > DateTime.now().year + 1) {
+                      return l10n.nationalIdNumeric;
                     }
                     return null;
                   },
                 ),
                 const SizedBox(height: AppConstants.spacingMd),
                 CustomTextField(
-                  label: 'Insurance Company',
-                  hint: 'Enter insurance company name',
+                  label: l10n.insuranceCompany,
+                  hint: l10n.enterInsuranceCompany,
                   controller: _insuranceCompanyController,
                   prefixIcon: Icons.security_rounded,
-                  validator: (v) => Validators.required(v, 'Insurance company'),
+                  validator: (v) => Validators.required(v, l10n.insuranceCompany),
                   textInputAction: TextInputAction.next,
                 ),
                 const SizedBox(height: AppConstants.spacingMd),
                 CustomTextField(
-                  label: 'Insurance ID',
-                  hint: 'Enter insurance policy number',
+                  label: l10n.insuranceId,
+                  hint: l10n.enterInsuranceId,
                   controller: _insuranceIdController,
                   prefixIcon: Icons.policy_rounded,
-                  validator: (v) => Validators.required(v, 'Insurance ID'),
+                  validator: (v) => Validators.required(v, l10n.insuranceId),
                   textInputAction: TextInputAction.done,
                 ),
                 const SizedBox(height: AppConstants.spacingXl),
                 PrimaryButton(
-                  text: 'Save Car',
+                  text: l10n.saveCar,
                   onPressed: isLoading ? null : _saveCar,
                   isLoading: isLoading,
                 ),

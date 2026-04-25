@@ -3,8 +3,9 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/constants/app_strings.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/l10n/app_localizations.dart';
+import '../../../../core/providers/locale_provider.dart';
 import '../../../../common/widgets/primary_button.dart';
 import '../../../../common/widgets/custom_text_field.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
@@ -25,26 +26,6 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
   final _insuranceController = TextEditingController();
   final _descriptionController = TextEditingController();
 
-  String? _selectedAccidentType;
-  String? _selectedWeather;
-  bool _injuriesReported = false;
-
-  static const _accidentTypes = [
-    'Minor Collision',
-    'Rear-end Accident',
-    'Side Collision',
-    'Parking Accident',
-    'Other',
-  ];
-
-  static const _weatherConditions = [
-    'Clear',
-    'Rainy',
-    'Foggy',
-    'Icy',
-    'Other',
-  ];
-
   @override
   void initState() {
     super.initState();
@@ -57,39 +38,28 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
     final auth = context.read<AuthProvider>();
     final report = context.read<ReportProvider>();
 
-    // Auto-fill from saved report state first (user already submitted form once)
     if (report.fullName.isNotEmpty) {
       _nameController.text = report.fullName;
       _phoneController.text = report.phoneNumber;
       _plateController.text = report.vehiclePlateNumber;
       _insuranceController.text = report.insuranceCompany;
       _descriptionController.text = report.accidentDescription;
-      setState(() {
-        _selectedAccidentType =
-            report.accidentType.isEmpty ? null : report.accidentType;
-        _selectedWeather =
-            report.weatherCondition.isEmpty ? null : report.weatherCondition;
-        _injuriesReported = report.injuriesReported;
-      });
+      setState(() {});
       return;
     }
 
-    // Otherwise auto-fill from user profile
     final profile = auth.userProfile;
     if (profile != null) {
       _nameController.text = (profile['name'] as String? ?? '');
       _phoneController.text = (profile['phone_number'] as String? ?? '');
     }
 
-    // If user has cars and none selected yet, pre-select the first one
     if (auth.cars.isNotEmpty && report.selectedCar == null) {
       report.selectCar(auth.cars.first);
     }
 
-    // Auto-fill from selected car
     _applyCarToFields(report.selectedCar);
 
-    // Fetch cars if not loaded yet
     if (auth.cars.isEmpty) {
       auth.fetchCars().then((_) {
         if (!mounted) return;
@@ -113,13 +83,12 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
   void _showCarPicker() {
     final auth = context.read<AuthProvider>();
     final report = context.read<ReportProvider>();
+    final l10n = AppLocalizations.of(context);
 
     if (auth.cars.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('No vehicles registered. Add a vehicle in your profile.'),
-        ),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(l10n.noVehiclesForAccident)));
       return;
     }
 
@@ -137,9 +106,12 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Select Your Vehicle',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                Text(
+                  l10n.selectYourVehicle,
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 12),
                 ...auth.cars.map((car) {
@@ -167,22 +139,13 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
 
   void _continue() {
     if (_formKey.currentState!.validate()) {
-      if (_selectedAccidentType == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Please select an accident type')),
-        );
-        return;
-      }
       context.read<ReportProvider>().setDriverDetails(
-            fullName: _nameController.text.trim(),
-            phoneNumber: _phoneController.text.trim(),
-            vehiclePlateNumber: _plateController.text.trim(),
-            insuranceCompany: _insuranceController.text.trim(),
-            accidentDescription: _descriptionController.text.trim(),
-            accidentType: _selectedAccidentType!,
-            weatherCondition: _selectedWeather ?? 'Not specified',
-            injuriesReported: _injuriesReported,
-          );
+        fullName: _nameController.text.trim(),
+        phoneNumber: _phoneController.text.trim(),
+        vehiclePlateNumber: _plateController.text.trim(),
+        insuranceCompany: _insuranceController.text.trim(),
+        accidentDescription: _descriptionController.text.trim(),
+      );
       context.push('/report/review');
     }
   }
@@ -199,6 +162,7 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final auth = context.watch<AuthProvider>();
     final report = context.watch<ReportProvider>();
     final nationalId = auth.nationalId ?? '—';
@@ -210,7 +174,7 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.pop(),
         ),
-        title: const Text(AppStrings.driverDetails),
+        title: Text(l10n.driverDetails),
       ),
       body: SafeArea(
         child: Column(
@@ -223,30 +187,28 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'Confirm your information and vehicle details',
-                        style: TextStyle(
+                      Text(
+                        l10n.confirmInfoDesc,
+                        style: const TextStyle(
                           fontSize: 15,
                           color: AppColors.textSecondary,
                         ),
                       ),
                       const SizedBox(height: AppConstants.spacingLg),
 
-                      // ── YOUR INFORMATION ─────────────────────────────
-                      _SectionHeader(label: 'Your Information'),
+                      _SectionHeader(label: l10n.yourInformation),
                       const SizedBox(height: AppConstants.spacingMd),
 
-                      // National ID (read-only info chip)
                       _InfoRow(
                         icon: Icons.badge_rounded,
-                        label: 'National ID',
+                        label: l10n.nationalId,
                         value: nationalId,
                       ),
                       const SizedBox(height: AppConstants.spacingMd),
 
                       CustomTextField(
-                        label: AppStrings.fullName,
-                        hint: 'Enter full name',
+                        label: l10n.fullName,
+                        hint: l10n.enterFullName,
                         controller: _nameController,
                         prefixIcon: Icons.person_rounded,
                         validator: Validators.name,
@@ -255,7 +217,7 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
                       const SizedBox(height: AppConstants.spacingMd),
 
                       CustomTextField(
-                        label: AppStrings.phoneNumber,
+                        label: l10n.phoneNumber,
                         hint: '+962 7XX XXX XXX',
                         controller: _phoneController,
                         keyboardType: TextInputType.phone,
@@ -265,11 +227,9 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
                       ),
                       const SizedBox(height: AppConstants.spacingXl),
 
-                      // ── YOUR VEHICLE ──────────────────────────────────
-                      _SectionHeader(label: 'Your Vehicle'),
+                      _SectionHeader(label: l10n.yourVehicle),
                       const SizedBox(height: AppConstants.spacingMd),
 
-                      // Car selector button
                       GestureDetector(
                         onTap: _showCarPicker,
                         child: Container(
@@ -298,8 +258,8 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
                                   selectedCar != null
                                       ? '${selectedCar['manufacturer'] ?? ''} — ${selectedCar['plate_number'] ?? ''}'
                                       : auth.isLoading
-                                          ? 'Loading vehicles…'
-                                          : 'Select your vehicle',
+                                      ? l10n.loadingVehicles
+                                      : l10n.selectVehicleHint,
                                   style: TextStyle(
                                     fontSize: 15,
                                     color: selectedCar != null
@@ -320,110 +280,38 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
                         ),
                       ),
 
-                      // Selected car details card
                       if (selectedCar != null) ...[
                         const SizedBox(height: AppConstants.spacingMd),
-                        _CarDetailsCard(car: selectedCar),
+                        _CarDetailsCard(car: selectedCar, l10n: l10n),
                       ],
 
                       const SizedBox(height: AppConstants.spacingMd),
 
-                      // Plate number (auto-filled but editable)
                       CustomTextField(
-                        label: AppStrings.vehiclePlateNumber,
-                        hint: 'Enter plate number',
+                        label: l10n.plateNumber,
+                        hint: l10n.enterPlate,
                         controller: _plateController,
                         prefixIcon: Icons.pin_rounded,
-                        validator: (v) => Validators.required(v, 'Plate number'),
+                        validator: (v) =>
+                            Validators.required(v, l10n.plateNumber),
                         textInputAction: TextInputAction.next,
                       ),
                       const SizedBox(height: AppConstants.spacingMd),
 
-                      // Insurance (auto-filled but editable)
                       CustomTextField(
-                        label: AppStrings.insuranceCompany,
-                        hint: 'Enter insurance company',
+                        label: l10n.insuranceCompany,
+                        hint: l10n.enterInsuranceCompany,
                         controller: _insuranceController,
                         prefixIcon: Icons.shield_rounded,
                         textInputAction: TextInputAction.next,
                       ),
                       const SizedBox(height: AppConstants.spacingXl),
 
-                      // ── ACCIDENT DETAILS ──────────────────────────────
-                      _SectionHeader(label: 'Accident Details'),
-                      const SizedBox(height: AppConstants.spacingMd),
-
-                      // Accident Type dropdown
-                      _DropdownField(
-                        label: 'Accident Type',
-                        hint: 'Select accident type',
-                        icon: Icons.car_crash_rounded,
-                        value: _selectedAccidentType,
-                        items: _accidentTypes,
-                        onChanged: (v) =>
-                            setState(() => _selectedAccidentType = v),
-                        required: true,
-                      ),
-                      const SizedBox(height: AppConstants.spacingMd),
-
-                      // Weather Conditions dropdown
-                      _DropdownField(
-                        label: 'Weather Conditions',
-                        hint: 'Select weather at time of accident',
-                        icon: Icons.wb_sunny_rounded,
-                        value: _selectedWeather,
-                        items: _weatherConditions,
-                        onChanged: (v) => setState(() => _selectedWeather = v),
-                        required: false,
-                      ),
-                      const SizedBox(height: AppConstants.spacingMd),
-
-                      // Injuries Reported toggle
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(
-                            AppConstants.borderRadius,
-                          ),
-                          border: Border.all(color: AppColors.border),
-                        ),
-                        child: Row(
-                          children: [
-                            const Icon(
-                              Icons.personal_injury_rounded,
-                              color: AppColors.primary,
-                              size: 20,
-                            ),
-                            const SizedBox(width: 12),
-                            const Expanded(
-                              child: Text(
-                                'Injuries Reported',
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  color: AppColors.textPrimary,
-                                  fontWeight: FontWeight.w500,
-                                ),
-                              ),
-                            ),
-                            Switch(
-                              value: _injuriesReported,
-                              activeThumbColor: AppColors.primary,
-                              onChanged: (v) =>
-                                  setState(() => _injuriesReported = v),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: AppConstants.spacingMd),
-
-                      // Accident Description
                       CustomTextField(
-                        label: AppStrings.accidentDescription,
-                        hint: 'Describe what happened…',
+                        label: l10n.accidentDescription,
+                        hint: context.read<LocaleProvider>().isArabic
+                            ? 'صِف ما حدث…'
+                            : 'Describe what happened…',
                         controller: _descriptionController,
                         maxLines: 4,
                         prefixIcon: Icons.edit_note_rounded,
@@ -435,11 +323,10 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
               ),
             ),
 
-            // Bottom Button
             Padding(
               padding: const EdgeInsets.all(AppConstants.paddingScreen),
               child: PrimaryButton(
-                text: AppStrings.continueText,
+                text: l10n.continueText,
                 onPressed: _continue,
               ),
             ),
@@ -449,8 +336,6 @@ class _DriverDetailsScreenState extends State<DriverDetailsScreen> {
     );
   }
 }
-
-// ── Section header ────────────────────────────────────────────────────────────
 
 class _SectionHeader extends StatelessWidget {
   const _SectionHeader({required this.label});
@@ -482,8 +367,6 @@ class _SectionHeader extends StatelessWidget {
     );
   }
 }
-
-// ── Read-only info row ────────────────────────────────────────────────────────
 
 class _InfoRow extends StatelessWidget {
   const _InfoRow({
@@ -531,20 +414,19 @@ class _InfoRow extends StatelessWidget {
   }
 }
 
-// ── Car details card (auto-filled info) ──────────────────────────────────────
-
 class _CarDetailsCard extends StatelessWidget {
-  const _CarDetailsCard({required this.car});
+  const _CarDetailsCard({required this.car, required this.l10n});
   final Map<String, dynamic> car;
+  final AppLocalizations l10n;
 
   @override
   Widget build(BuildContext context) {
     final items = <({String label, String? value})>[
-      (label: 'Make', value: car['manufacturer'] as String?),
-      (label: 'Type', value: car['car_type'] as String?),
-      (label: 'Color', value: car['color'] as String?),
-      (label: 'Year', value: car['year']?.toString()),
-      (label: 'Insurance ID', value: car['insurance_id'] as String?),
+      (label: l10n.make, value: car['manufacturer'] as String?),
+      (label: l10n.type, value: car['car_type'] as String?),
+      (label: l10n.color, value: car['color'] as String?),
+      (label: l10n.year, value: car['year']?.toString()),
+      (label: l10n.insuranceId, value: car['insurance_id'] as String?),
     ].where((e) => e.value != null && e.value!.isNotEmpty).toList();
 
     if (items.isEmpty) return const SizedBox.shrink();
@@ -590,85 +472,6 @@ class _CarDetailsCard extends StatelessWidget {
     );
   }
 }
-
-// ── Dropdown field ─────────────────────────────────────────────────────────────
-
-class _DropdownField extends StatelessWidget {
-  const _DropdownField({
-    required this.label,
-    required this.hint,
-    required this.icon,
-    required this.value,
-    required this.items,
-    required this.onChanged,
-    required this.required,
-  });
-
-  final String label;
-  final String hint;
-  final IconData icon;
-  final String? value;
-  final List<String> items;
-  final ValueChanged<String?> onChanged;
-  final bool required;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          label,
-          style: const TextStyle(
-            fontSize: 13,
-            fontWeight: FontWeight.w600,
-            color: AppColors.textPrimary,
-          ),
-        ),
-        const SizedBox(height: 6),
-        DropdownButtonFormField<String>(
-          key: ValueKey(value),
-          initialValue: value,
-          hint: Text(hint, style: const TextStyle(color: AppColors.textHint)),
-          decoration: InputDecoration(
-            prefixIcon: Icon(icon, color: AppColors.primary, size: 20),
-            contentPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 14,
-            ),
-            filled: true,
-            fillColor: AppColors.surface,
-            border: OutlineInputBorder(
-              borderRadius:
-                  BorderRadius.circular(AppConstants.borderRadius),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            enabledBorder: OutlineInputBorder(
-              borderRadius:
-                  BorderRadius.circular(AppConstants.borderRadius),
-              borderSide: const BorderSide(color: AppColors.border),
-            ),
-            focusedBorder: OutlineInputBorder(
-              borderRadius:
-                  BorderRadius.circular(AppConstants.borderRadius),
-              borderSide:
-                  const BorderSide(color: AppColors.primary, width: 1.5),
-            ),
-          ),
-          items: items
-              .map((e) => DropdownMenuItem(value: e, child: Text(e)))
-              .toList(),
-          onChanged: onChanged,
-          validator: required
-              ? (v) => v == null ? '$label is required' : null
-              : null,
-        ),
-      ],
-    );
-  }
-}
-
-// ── Car picker tile (bottom sheet) ────────────────────────────────────────────
 
 class _CarPickerTile extends StatelessWidget {
   const _CarPickerTile({

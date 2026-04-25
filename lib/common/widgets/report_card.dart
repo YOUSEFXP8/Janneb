@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/constants/app_constants.dart';
+import '../../core/l10n/app_localizations.dart';
 import '../../features/report_accident/data/models/accident_report.dart';
 
 class ReportCard extends StatelessWidget {
@@ -9,20 +11,15 @@ class ReportCard extends StatelessWidget {
 
   const ReportCard({super.key, required this.report, required this.onTap});
 
+  Future<void> _launchMaps(double lat, double lng) async {
+    final uri = Uri.parse('https://www.google.com/maps/search/?api=1&query=$lat,$lng');
+    await launchUrl(uri, mode: LaunchMode.externalApplication);
+  }
+
   String _formatDate(DateTime date) {
     const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec',
     ];
     return '${months[date.month - 1]} ${date.day}, ${date.year}';
   }
@@ -42,16 +39,16 @@ class ReportCard extends StatelessWidget {
     }
   }
 
-  String _formatStatus(String status) {
+  String _formatStatus(String status, AppLocalizations l10n) {
     switch (status) {
       case 'REPORTED':
-        return 'Reported';
+        return l10n.statusReported;
       case 'UNDER_REVIEW':
-        return 'Under Review';
+        return l10n.statusUnderReview;
       case 'OFFICER_ASSIGNED':
-        return 'Officer Assigned';
+        return l10n.statusUnderReview;
       case 'COMPLETED':
-        return 'Completed';
+        return l10n.statusCompleted;
       default:
         return status;
     }
@@ -59,6 +56,7 @@ class ReportCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final statusColor = _getStatusColor(report.status);
 
     return Card(
@@ -97,7 +95,7 @@ class ReportCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
-                      _formatStatus(report.status),
+                      _formatStatus(report.status, l10n),
                       style: TextStyle(
                         color: statusColor,
                         fontWeight: FontWeight.bold,
@@ -108,24 +106,25 @@ class ReportCard extends StatelessWidget {
                 ],
               ),
               const SizedBox(height: AppConstants.spacingMd),
-              Row(
-                children: [
-                  const Icon(
-                    Icons.location_on_outlined,
-                    size: 16,
-                    color: AppColors.textSecondary,
-                  ),
-                  const SizedBox(width: 4),
-                  Expanded(
-                    child: Text(
-                      'Location: ${report.latitude}, ${report.longitude}',
+              GestureDetector(
+                onTap: () => _launchMaps(report.latitude, report.longitude),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.location_on_outlined, size: 16, color: AppColors.primary),
+                    const SizedBox(width: 4),
+                    Text(
+                      l10n.viewOnMap,
                       style: const TextStyle(
-                        color: AppColors.textSecondary,
+                        color: AppColors.primary,
                         fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        decoration: TextDecoration.underline,
+                        decorationColor: AppColors.primary,
                       ),
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
               const SizedBox(height: 8),
               Row(
@@ -137,7 +136,7 @@ class ReportCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    'Date: ${_formatDate(report.date)}',
+                    '${l10n.dateLabel}: ${_formatDate(report.date)}',
                     style: const TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 14,

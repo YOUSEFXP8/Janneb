@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/l10n/app_localizations.dart';
+import '../../../../core/providers/locale_provider.dart';
 import '../../../../common/widgets/primary_button.dart';
 import '../../../../common/widgets/custom_text_field.dart';
 import '../providers/auth_provider.dart';
@@ -23,6 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _biometricService = BiometricService();
   bool _obscurePassword = true;
   bool _canUseBiometrics = false;
+  String? _errorMessage;
 
   @override
   void initState() {
@@ -48,23 +51,36 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
+  void _setError(String? error, bool isAr) {
+    if (error == null) return;
+    final l10n = AppLocalizations(isAr);
+    final lower = error.toLowerCase();
+    final msg = lower.contains('invalid') || lower.contains('credentials')
+        ? l10n.incorrectCredentials
+        : lower.contains('not found') || lower.contains('no user')
+            ? l10n.noAccountFound
+            : lower.contains('network') || lower.contains('connection')
+                ? l10n.connectionError
+                : error;
+    setState(() => _errorMessage = msg);
+  }
+
   Future<void> _login() async {
+    setState(() => _errorMessage = null);
     if (!_formKey.currentState!.validate()) return;
+    final isAr = context.read<LocaleProvider>().isArabic;
     final auth = context.read<AuthProvider>();
     final success = await auth.signIn(
       _emailController.text.trim(),
       _passwordController.text,
     );
     if (!mounted) return;
-    if (!success && auth.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(auth.error!), backgroundColor: AppColors.error),
-      );
-    }
-    // GoRouter redirect handles navigation on success
+    if (!success && auth.error != null) _setError(auth.error, isAr);
   }
 
   Future<void> _biometricLogin() async {
+    setState(() => _errorMessage = null);
+    final isAr = context.read<LocaleProvider>().isArabic;
     final authenticated = await _biometricService.authenticate();
     if (!mounted || !authenticated) return;
 
@@ -77,15 +93,52 @@ class _LoginScreenState extends State<LoginScreen> {
       credentials['password']!,
     );
     if (!mounted) return;
-    if (!success && auth.error != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(auth.error!), backgroundColor: AppColors.error),
-      );
-    }
+    if (!success && auth.error != null) _setError(auth.error, isAr);
+  }
+
+  Widget _buildErrorBanner() {
+    return AnimatedSize(
+      duration: AppConstants.animationFast,
+      child: _errorMessage == null
+          ? const SizedBox.shrink()
+          : Container(
+              margin: const EdgeInsets.only(bottom: AppConstants.spacingMd),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+              decoration: BoxDecoration(
+                color: AppColors.error.withValues(alpha: 0.08),
+                borderRadius: BorderRadius.circular(AppConstants.borderRadius),
+                border: Border.all(color: AppColors.error.withValues(alpha: 0.35)),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Icon(Icons.error_outline_rounded,
+                      color: AppColors.error, size: 20),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Text(
+                      _errorMessage!,
+                      style: const TextStyle(
+                        color: AppColors.error,
+                        fontSize: 14,
+                        height: 1.4,
+                      ),
+                    ),
+                  ),
+                  GestureDetector(
+                    onTap: () => setState(() => _errorMessage = null),
+                    child: const Icon(Icons.close_rounded,
+                        color: AppColors.error, size: 18),
+                  ),
+                ],
+              ),
+            ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final isLoading = context.select<AuthProvider, bool>((a) => a.isLoading);
 
     return Scaffold(
@@ -114,10 +167,10 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: AppConstants.spacingLg),
-                const Center(
+                Center(
                   child: Text(
-                    'Welcome Back',
-                    style: TextStyle(
+                    l10n.welcomeBack,
+                    style: const TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                       color: AppColors.textPrimary,
@@ -125,29 +178,30 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
                 const SizedBox(height: AppConstants.spacingSm),
-                const Center(
+                Center(
                   child: Text(
-                    'Sign in to your account',
-                    style: TextStyle(
+                    l10n.signInToAccount,
+                    style: const TextStyle(
                       fontSize: 16,
                       color: AppColors.textSecondary,
                     ),
                   ),
                 ),
                 const SizedBox(height: AppConstants.spacingXl + 8),
+                _buildErrorBanner(),
                 CustomTextField(
-                  label: 'Email',
-                  hint: 'Enter your email',
+                  label: l10n.email,
+                  hint: l10n.enterEmail,
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
                   prefixIcon: Icons.email_rounded,
-                  validator: (v) => Validators.required(v, 'Email'),
+                  validator: Validators.email,
                   textInputAction: TextInputAction.next,
                 ),
                 const SizedBox(height: AppConstants.spacingMd),
                 CustomTextField(
-                  label: 'Password',
-                  hint: 'Enter your password',
+                  label: l10n.password,
+                  hint: l10n.enterPassword,
                   controller: _passwordController,
                   obscureText: _obscurePassword,
                   prefixIcon: Icons.lock_rounded,
@@ -167,7 +221,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 ),
                 const SizedBox(height: AppConstants.spacingLg),
                 PrimaryButton(
-                  text: 'Login',
+                  text: l10n.login,
                   onPressed: isLoading ? null : _login,
                   isLoading: isLoading,
                 ),
@@ -189,18 +243,18 @@ class _LoginScreenState extends State<LoginScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Text(
-                        "Don't have an account? ",
-                        style: TextStyle(
+                      Text(
+                        l10n.dontHaveAccount,
+                        style: const TextStyle(
                           fontSize: 14,
                           color: AppColors.textSecondary,
                         ),
                       ),
                       GestureDetector(
                         onTap: () => context.push('/signup'),
-                        child: const Text(
-                          'Sign Up',
-                          style: TextStyle(
+                        child: Text(
+                          l10n.signUp,
+                          style: const TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                             color: AppColors.primary,

@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
 import '../../../../core/utils/validators.dart';
+import '../../../../core/l10n/app_localizations.dart';
+import '../../../../core/providers/locale_provider.dart';
 import '../../../../common/widgets/primary_button.dart';
 import '../../../../common/widgets/custom_text_field.dart';
 import '../../../../features/auth/presentation/providers/auth_provider.dart';
@@ -61,16 +63,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Future<void> _save() async {
+    final isAr = context.read<LocaleProvider>().isArabic;
+    final l10n = AppLocalizations(isAr);
+
     if (!_formKey.currentState!.validate()) return;
     if (_dateOfBirth == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select your date of birth')),
+        SnackBar(content: Text(l10n.selectDateOfBirthMsg)),
       );
       return;
     }
     if (_gender == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select your gender')),
+        SnackBar(content: Text(l10n.selectGenderMsg)),
       );
       return;
     }
@@ -89,22 +94,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (!mounted) return;
     if (success) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profile updated successfully'),
+        SnackBar(
+          content: Text(AppLocalizations(isAr).profileUpdated),
           backgroundColor: AppColors.success,
         ),
       );
       context.pop();
     } else if (auth.error != null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-            content: Text(auth.error!), backgroundColor: AppColors.error),
+        SnackBar(content: Text(auth.error!), backgroundColor: AppColors.error),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final isLoading = context.select<AuthProvider, bool>((a) => a.isLoading);
     final nationalId =
         context.select<AuthProvider, String?>((a) => a.nationalId);
@@ -118,9 +123,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: const Text(
-          'Edit Profile',
-          style: TextStyle(
+        title: Text(
+          l10n.editProfile,
+          style: const TextStyle(
               color: AppColors.textPrimary, fontWeight: FontWeight.bold),
         ),
       ),
@@ -132,7 +137,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // National ID — read only
                 Container(
                   padding: const EdgeInsets.symmetric(
                       horizontal: AppConstants.paddingCard,
@@ -151,8 +155,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Text('National ID',
-                              style: TextStyle(
+                          Text(l10n.nationalId,
+                              style: const TextStyle(
                                   fontSize: 12,
                                   color: AppColors.textSecondary)),
                           const SizedBox(height: 2),
@@ -173,9 +177,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           color: AppColors.accentLight,
                           borderRadius: BorderRadius.circular(6),
                         ),
-                        child: const Text(
-                          'Cannot change',
-                          style: TextStyle(
+                        child: Text(
+                          l10n.cannotChange,
+                          style: const TextStyle(
                               fontSize: 11, color: AppColors.primary),
                         ),
                       ),
@@ -184,8 +188,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
                 const SizedBox(height: AppConstants.spacingMd),
                 CustomTextField(
-                  label: 'Full Name',
-                  hint: 'Enter your full name',
+                  label: l10n.fullName,
+                  hint: l10n.enterFullName,
                   controller: _nameController,
                   prefixIcon: Icons.person_rounded,
                   validator: Validators.name,
@@ -193,7 +197,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 ),
                 const SizedBox(height: AppConstants.spacingMd),
                 CustomTextField(
-                  label: 'Phone Number',
+                  label: l10n.phoneNumber,
                   hint: '+962 7XX XXX XXX',
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
@@ -206,8 +210,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   onTap: _pickDate,
                   child: AbsorbPointer(
                     child: CustomTextField(
-                      label: 'Date of Birth',
-                      hint: 'Select your date of birth',
+                      label: l10n.dateOfBirth,
+                      hint: l10n.selectDateOfBirth,
                       controller: TextEditingController(
                         text: _dateOfBirth == null
                             ? ''
@@ -215,7 +219,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       ),
                       prefixIcon: Icons.calendar_today_rounded,
                       validator: (_) =>
-                          _dateOfBirth == null ? 'Date of birth is required' : null,
+                          _dateOfBirth == null ? l10n.dateOfBirthRequired : null,
                     ),
                   ),
                 ),
@@ -223,7 +227,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 DropdownButtonFormField<String>(
                   initialValue: _gender,
                   decoration: InputDecoration(
-                    labelText: 'Gender',
+                    labelText: l10n.gender,
                     prefixIcon: const Icon(Icons.wc_rounded),
                     border: OutlineInputBorder(
                       borderRadius:
@@ -241,17 +245,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           color: AppColors.primary, width: 2),
                     ),
                   ),
-                  items: const [
-                    DropdownMenuItem(value: 'Male', child: Text('Male')),
-                    DropdownMenuItem(value: 'Female', child: Text('Female')),
+                  items: [
+                    DropdownMenuItem(value: 'Male', child: Text(l10n.male)),
+                    DropdownMenuItem(value: 'Female', child: Text(l10n.female)),
                   ],
                   onChanged: (v) => setState(() => _gender = v),
                   validator: (v) =>
-                      v == null ? 'Please select your gender' : null,
+                      v == null ? l10n.selectGenderMsg : null,
                 ),
                 const SizedBox(height: AppConstants.spacingXl),
                 PrimaryButton(
-                  text: 'Save Changes',
+                  text: l10n.saveChanges,
                   onPressed: isLoading ? null : _save,
                   isLoading: isLoading,
                 ),

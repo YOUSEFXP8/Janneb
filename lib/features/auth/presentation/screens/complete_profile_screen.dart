@@ -3,7 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/utils/validators.dart';
+import '../../../../core/l10n/app_localizations.dart';
+import '../../../../core/providers/locale_provider.dart';
 import '../../../../common/widgets/primary_button.dart';
 import '../../../../common/widgets/custom_text_field.dart';
 import '../providers/auth_provider.dart';
@@ -42,16 +43,17 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
   }
 
   Future<void> _saveProfile() async {
+    final l10n = AppLocalizations(context.read<LocaleProvider>().isArabic);
     if (!_formKey.currentState!.validate()) return;
     if (_dateOfBirth == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select your date of birth')),
+        SnackBar(content: Text(l10n.selectDateOfBirthMsg)),
       );
       return;
     }
     if (_gender == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select your gender')),
+        SnackBar(content: Text(l10n.selectGenderMsg)),
       );
       return;
     }
@@ -80,6 +82,7 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final isLoading = context.select<AuthProvider, bool>((a) => a.isLoading);
 
     return Scaffold(
@@ -92,79 +95,74 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const SizedBox(height: AppConstants.spacingLg),
-                const Text(
-                  'Complete Your Profile',
-                  style: TextStyle(
+                Text(
+                  l10n.completeProfile,
+                  style: const TextStyle(
                     fontSize: 28,
                     fontWeight: FontWeight.bold,
                     color: AppColors.textPrimary,
                   ),
                 ),
                 const SizedBox(height: AppConstants.spacingSm),
-                const Text(
-                  'Tell us a bit about yourself',
-                  style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+                Text(
+                  l10n.tellUsAboutYourself,
+                  style: const TextStyle(fontSize: 16, color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: AppConstants.spacingXl),
                 CustomTextField(
-                  label: 'National ID',
-                  hint: 'Enter your national ID number',
+                  label: l10n.nationalId,
+                  hint: l10n.enterNationalId,
                   controller: _nationalIdController,
                   keyboardType: TextInputType.number,
                   prefixIcon: Icons.badge_rounded,
                   textInputAction: TextInputAction.next,
                   validator: (v) {
-                    if (v == null || v.trim().isEmpty) return 'National ID is required';
-                    if (!RegExp(r'^\d+$').hasMatch(v.trim())) {
-                      return 'National ID must be numeric';
-                    }
+                    if (v == null || v.trim().isEmpty) return l10n.nationalIdRequired;
+                    if (!RegExp(r'^\d+$').hasMatch(v.trim())) return l10n.nationalIdNumeric;
                     return null;
                   },
                 ),
                 const SizedBox(height: AppConstants.spacingMd),
                 CustomTextField(
-                  label: 'Full Name',
-                  hint: 'Enter your full name',
+                  label: l10n.fullName,
+                  hint: l10n.enterFullName,
                   controller: _nameController,
                   prefixIcon: Icons.person_rounded,
-                  validator: Validators.name,
+                  validator: (v) => v == null || v.trim().isEmpty ? l10n.nationalIdRequired.replaceFirst('ID', l10n.fullName) : null,
                   textInputAction: TextInputAction.next,
                 ),
                 const SizedBox(height: AppConstants.spacingMd),
                 CustomTextField(
-                  label: 'Phone Number',
+                  label: l10n.phoneNumber,
                   hint: '+962 7XX XXX XXX',
                   controller: _phoneController,
                   keyboardType: TextInputType.phone,
                   prefixIcon: Icons.phone_rounded,
-                  validator: Validators.phone,
+                  validator: (v) => v == null || v.trim().isEmpty ? l10n.nationalIdRequired.replaceFirst('ID', l10n.phoneNumber) : null,
                   textInputAction: TextInputAction.done,
                 ),
                 const SizedBox(height: AppConstants.spacingMd),
-                // Date of Birth
                 GestureDetector(
                   onTap: _pickDate,
                   child: AbsorbPointer(
                     child: CustomTextField(
-                      label: 'Date of Birth',
-                      hint: 'Select your date of birth',
+                      label: l10n.dateOfBirth,
+                      hint: l10n.selectDateOfBirth,
                       controller: TextEditingController(
                         text: _dateOfBirth == null
                             ? ''
                             : '${_dateOfBirth!.day}/${_dateOfBirth!.month}/${_dateOfBirth!.year}',
                       ),
                       prefixIcon: Icons.calendar_today_rounded,
-                      validator: (v) =>
-                          _dateOfBirth == null ? 'Date of birth is required' : null,
+                      validator: (v) => _dateOfBirth == null ? l10n.dateOfBirthRequired : null,
                     ),
                   ),
                 ),
                 const SizedBox(height: AppConstants.spacingMd),
-                // Gender Dropdown
                 DropdownButtonFormField<String>(
                   initialValue: _gender,
                   decoration: InputDecoration(
-                    labelText: 'Gender',
+                    labelText: l10n.gender,
                     prefixIcon: const Icon(Icons.wc_rounded),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(AppConstants.borderRadius),
@@ -178,16 +176,16 @@ class _CompleteProfileScreenState extends State<CompleteProfileScreen> {
                       borderSide: const BorderSide(color: AppColors.primary, width: 2),
                     ),
                   ),
-                  items: const [
-                    DropdownMenuItem(value: 'male', child: Text('Male')),
-                    DropdownMenuItem(value: 'female', child: Text('Female')),
+                  items: [
+                    DropdownMenuItem(value: 'male', child: Text(l10n.male)),
+                    DropdownMenuItem(value: 'female', child: Text(l10n.female)),
                   ],
                   onChanged: (v) => setState(() => _gender = v),
-                  validator: (v) => v == null ? 'Please select your gender' : null,
+                  validator: (v) => v == null ? l10n.selectGenderMsg : null,
                 ),
                 const SizedBox(height: AppConstants.spacingXl),
                 PrimaryButton(
-                  text: 'Continue',
+                  text: l10n.continueBtn,
                   onPressed: isLoading ? null : _saveProfile,
                   isLoading: isLoading,
                 ),

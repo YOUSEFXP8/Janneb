@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/l10n/app_localizations.dart';
 import '../../../report_accident/presentation/providers/report_provider.dart';
 import '../widgets/guide_step_item.dart';
 
@@ -20,52 +21,23 @@ class _StepData {
   final IconData icon;
 }
 
-const List<_StepData> _steps = [
-  _StepData(
-    number: 1,
-    title: 'Ensure safety first',
-    subtitle: 'Move to a safe position, turn on hazard lights',
-    icon: Icons.warning_rounded,
-  ),
-  _StepData(
-    number: 2,
-    title: 'Document the accident',
-    subtitle: 'Take clear photos of both vehicles and damage',
-    icon: Icons.camera_alt_rounded,
-  ),
-  _StepData(
-    number: 3,
-    title: 'Confirm your location',
-    subtitle: 'Verify GPS accuracy or adjust pin manually',
-    icon: Icons.location_on_rounded,
-  ),
-  _StepData(
-    number: 4,
-    title: 'Enter vehicle details',
-    subtitle: 'Add plate number, insurance, and description',
-    icon: Icons.directions_car_rounded,
-  ),
-  _StepData(
-    number: 5,
-    title: 'Review your report',
-    subtitle: 'Check all information before submitting',
-    icon: Icons.description_rounded,
-  ),
-  _StepData(
-    number: 6,
-    title: 'Submit and move vehicle',
-    subtitle: 'Submit report, then move safely to roadside',
-    icon: Icons.check_circle_rounded,
-  ),
-];
-
 class ReportingGuideScreen extends StatelessWidget {
   const ReportingGuideScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final provider = context.watch<ReportProvider>();
     final currentStep = provider.guideStep;
+
+    final steps = [
+      _StepData(number: 1, title: l10n.stepTitle1, subtitle: l10n.stepDesc1, icon: Icons.warning_rounded),
+      _StepData(number: 2, title: l10n.stepTitle2, subtitle: l10n.stepDesc2, icon: Icons.camera_alt_rounded),
+      _StepData(number: 3, title: l10n.stepTitle3, subtitle: l10n.stepDesc3, icon: Icons.location_on_rounded),
+      _StepData(number: 4, title: l10n.stepTitle4, subtitle: l10n.stepDesc4, icon: Icons.directions_car_rounded),
+      _StepData(number: 5, title: l10n.stepTitle5, subtitle: l10n.stepDesc5, icon: Icons.description_rounded),
+      _StepData(number: 6, title: l10n.stepTitle6, subtitle: l10n.stepDesc6, icon: Icons.check_circle_rounded),
+    ];
 
     return Scaffold(
       backgroundColor: AppColors.scaffoldBackground,
@@ -80,9 +52,9 @@ class ReportingGuideScreen extends StatelessWidget {
           ),
           onPressed: () => context.pop(),
         ),
-        title: const Text(
-          'Reporting guide',
-          style: TextStyle(
+        title: Text(
+          l10n.reportingGuideTitle,
+          style: const TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w600,
             color: AppColors.textPrimary,
@@ -96,9 +68,9 @@ class ReportingGuideScreen extends StatelessWidget {
               color: AppColors.accentLight,
               borderRadius: BorderRadius.circular(20),
             ),
-            child: const Text(
-              '6 steps',
-              style: TextStyle(
+            child: Text(
+              l10n.sixSteps,
+              style: const TextStyle(
                 color: AppColors.primary,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
@@ -125,17 +97,17 @@ class ReportingGuideScreen extends StatelessWidget {
                 AppConstants.spacingMd,
               ),
               child: RichText(
-                text: const TextSpan(
-                  style: TextStyle(
+                text: TextSpan(
+                  style: const TextStyle(
                     fontSize: 15,
                     color: AppColors.textPrimary,
                     height: 1.5,
                   ),
                   children: [
-                    TextSpan(text: 'Follow these steps after a '),
+                    TextSpan(text: l10n.followSteps),
                     TextSpan(
-                      text: 'minor accident',
-                      style: TextStyle(
+                      text: l10n.minorAccident,
+                      style: const TextStyle(
                         color: AppColors.warning,
                         fontWeight: FontWeight.w600,
                       ),
@@ -149,14 +121,14 @@ class ReportingGuideScreen extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(
                   vertical: AppConstants.spacingMd,
                 ),
-                itemCount: _steps.length,
+                itemCount: steps.length,
                 separatorBuilder: (_, _) => Divider(
                   height: 1,
                   color: AppColors.divider,
                   indent: AppConstants.paddingScreen + 36 + AppConstants.spacingMd,
                 ),
                 itemBuilder: (context, i) {
-                  final step = _steps[i];
+                  final step = steps[i];
                   final StepStatus status;
                   if (i < currentStep) {
                     status = StepStatus.completed;
@@ -196,9 +168,9 @@ class ReportingGuideScreen extends StatelessWidget {
                     ),
                     elevation: 0,
                   ),
-                  child: const Text(
-                    'Start reporting now',
-                    style: TextStyle(
+                  child: Text(
+                    l10n.startReportingNow,
+                    style: const TextStyle(
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),

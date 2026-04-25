@@ -3,6 +3,8 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/l10n/app_localizations.dart';
+import '../../../../core/providers/locale_provider.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../data/models/car.dart';
 
@@ -18,12 +20,13 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
   void initState() {
     super.initState();
     WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final isAr = context.read<LocaleProvider>().isArabic;
       final auth = context.read<AuthProvider>();
       await auth.fetchCars();
       if (mounted && auth.error != null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to load insurance data'),
+          SnackBar(
+            content: Text(AppLocalizations(isAr).failedToLoadInsurance),
             backgroundColor: AppColors.error,
           ),
         );
@@ -33,16 +36,17 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppColors.scaffoldBackground,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _Header(),
+            _Header(l10n: l10n),
             Expanded(
               child: Consumer<AuthProvider>(
-                builder: (_, auth, __) {
+                builder: (_, auth, _) {
                   if (auth.isLoading && auth.cars.isEmpty) {
                     return const Center(
                       child: CircularProgressIndicator(color: AppColors.primary),
@@ -52,7 +56,7 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
                   final cars = auth.cars.map(Car.fromMap).toList();
 
                   if (cars.isEmpty) {
-                    return _EmptyState();
+                    return _EmptyState(l10n: l10n);
                   }
 
                   return ListView.separated(
@@ -65,7 +69,7 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
                     itemCount: cars.length,
                     separatorBuilder: (_, _) =>
                         const SizedBox(height: AppConstants.spacingMd),
-                    itemBuilder: (ctx, i) => _CarCard(car: cars[i]),
+                    itemBuilder: (ctx, i) => _CarCard(car: cars[i], l10n: l10n),
                   );
                 },
               ),
@@ -78,6 +82,9 @@ class _InsuranceScreenState extends State<InsuranceScreen> {
 }
 
 class _Header extends StatelessWidget {
+  final AppLocalizations l10n;
+  const _Header({required this.l10n});
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -114,9 +121,9 @@ class _Header extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: AppConstants.spacingMd),
-              const Text(
-                'Insurance',
-                style: TextStyle(
+              Text(
+                l10n.insuranceTitle,
+                style: const TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
@@ -125,11 +132,11 @@ class _Header extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppConstants.spacingSm),
-          const Padding(
-            padding: EdgeInsets.only(left: 56),
+          Padding(
+            padding: const EdgeInsets.only(left: 56),
             child: Text(
-              'Your registered vehicles and insurance providers',
-              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+              l10n.insuranceSubtitle,
+              style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
             ),
           ),
         ],
@@ -140,7 +147,8 @@ class _Header extends StatelessWidget {
 
 class _CarCard extends StatelessWidget {
   final Car car;
-  const _CarCard({required this.car});
+  final AppLocalizations l10n;
+  const _CarCard({required this.car, required this.l10n});
 
   @override
   Widget build(BuildContext context) {
@@ -199,7 +207,10 @@ class _CarCard extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 8),
-                      _InsuranceBadge(company: car.insuranceCompany),
+                      _InsuranceBadge(
+                        company: car.insuranceCompany,
+                        noInsuranceLabel: l10n.noInsuranceOnFile,
+                      ),
                     ],
                   ),
                 ),
@@ -218,7 +229,7 @@ class _CarCard extends StatelessWidget {
                   child: OutlinedButton.icon(
                     onPressed: () => _callInsurance(context, car.insuranceCompany),
                     icon: const Icon(Icons.phone_rounded, size: 16),
-                    label: const Text('Call Insurance'),
+                    label: Text(l10n.callInsurance),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.primary,
                       side: const BorderSide(color: AppColors.primary),
@@ -244,7 +255,7 @@ class _CarCard extends StatelessWidget {
   void _callInsurance(BuildContext context, String company) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text('Calling $company insurance...'),
+        content: Text(l10n.callingInsurance(company)),
         backgroundColor: AppColors.primary,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(
@@ -257,7 +268,8 @@ class _CarCard extends StatelessWidget {
 
 class _InsuranceBadge extends StatelessWidget {
   final String company;
-  const _InsuranceBadge({required this.company});
+  final String noInsuranceLabel;
+  const _InsuranceBadge({required this.company, required this.noInsuranceLabel});
 
   @override
   Widget build(BuildContext context) {
@@ -266,7 +278,7 @@ class _InsuranceBadge extends StatelessWidget {
         const Icon(Icons.shield_rounded, size: 13, color: AppColors.success),
         const SizedBox(width: 4),
         Text(
-          company.isEmpty ? 'No insurance on file' : company,
+          company.isEmpty ? noInsuranceLabel : company,
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w600,
@@ -279,6 +291,9 @@ class _InsuranceBadge extends StatelessWidget {
 }
 
 class _EmptyState extends StatelessWidget {
+  final AppLocalizations l10n;
+  const _EmptyState({required this.l10n});
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -289,7 +304,7 @@ class _EmptyState extends StatelessWidget {
           children: [
             Container(
               padding: const EdgeInsets.all(24),
-              decoration: BoxDecoration(
+              decoration: const BoxDecoration(
                 color: AppColors.accentLight,
                 shape: BoxShape.circle,
               ),
@@ -300,19 +315,19 @@ class _EmptyState extends StatelessWidget {
               ),
             ),
             const SizedBox(height: AppConstants.spacingLg),
-            const Text(
-              'No vehicles registered',
-              style: TextStyle(
+            Text(
+              l10n.noVehiclesInsurance,
+              style: const TextStyle(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
                 color: AppColors.textPrimary,
               ),
             ),
             const SizedBox(height: AppConstants.spacingSm),
-            const Text(
-              'Add a vehicle to view its insurance information.',
+            Text(
+              l10n.addVehicleForInsurance,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 14, color: AppColors.textSecondary),
+              style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
             ),
             const SizedBox(height: AppConstants.spacingXl),
             SizedBox(
@@ -321,7 +336,7 @@ class _EmptyState extends StatelessWidget {
               child: ElevatedButton.icon(
                 onPressed: () => context.push('/cars/add'),
                 icon: const Icon(Icons.add_rounded),
-                label: const Text('Add Vehicle'),
+                label: Text(l10n.addVehicleBtn),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.primary,
                   foregroundColor: Colors.white,

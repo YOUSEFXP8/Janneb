@@ -3,6 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/l10n/app_localizations.dart';
 import '../../../../common/widgets/primary_button.dart';
 import '../providers/auth_provider.dart';
 
@@ -24,6 +25,7 @@ class _CarListScreenState extends State<CarListScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       body: SafeArea(
         child: Padding(
@@ -32,18 +34,18 @@ class _CarListScreenState extends State<CarListScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: AppConstants.spacingLg),
-              const Text(
-                'Your Vehicles',
-                style: TextStyle(
+              Text(
+                l10n.yourVehicles,
+                style: const TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                   color: AppColors.textPrimary,
                 ),
               ),
               const SizedBox(height: AppConstants.spacingSm),
-              const Text(
-                'Register at least one vehicle to continue',
-                style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+              Text(
+                l10n.registerVehicleToStart,
+                style: const TextStyle(fontSize: 16, color: AppColors.textSecondary),
               ),
               const SizedBox(height: AppConstants.spacingXl),
               Expanded(
@@ -57,12 +59,12 @@ class _CarListScreenState extends State<CarListScreen> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.directions_car_rounded,
+                            const Icon(Icons.directions_car_rounded,
                                 size: 64, color: AppColors.textHint),
                             const SizedBox(height: AppConstants.spacingMd),
-                            const Text(
-                              'No vehicles added yet',
-                              style: TextStyle(
+                            Text(
+                              l10n.noVehiclesAdded,
+                              style: const TextStyle(
                                 fontSize: 16,
                                 color: AppColors.textSecondary,
                               ),
@@ -143,12 +145,11 @@ class _CarListScreenState extends State<CarListScreen> {
               OutlinedButton.icon(
                 onPressed: () => context.push('/cars/add'),
                 icon: const Icon(Icons.add_rounded),
-                label: const Text('Add Car'),
+                label: Text(l10n.addCar),
                 style: OutlinedButton.styleFrom(
                   minimumSize: const Size(double.infinity, AppConstants.buttonHeight),
                   shape: RoundedRectangleBorder(
-                    borderRadius:
-                        BorderRadius.circular(AppConstants.borderRadius),
+                    borderRadius: BorderRadius.circular(AppConstants.borderRadius),
                   ),
                   side: const BorderSide(color: AppColors.primary),
                   foregroundColor: AppColors.primary,
@@ -157,7 +158,7 @@ class _CarListScreenState extends State<CarListScreen> {
               const SizedBox(height: AppConstants.spacingMd),
               Consumer<AuthProvider>(
                 builder: (context, auth, _) => PrimaryButton(
-                  text: 'Finish Setup',
+                  text: l10n.finishSetup,
                   onPressed: auth.cars.isEmpty ? null : () => context.go('/home'),
                 ),
               ),

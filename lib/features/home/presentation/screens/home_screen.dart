@@ -3,7 +3,7 @@ import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/constants/app_strings.dart';
+import '../../../../core/l10n/app_localizations.dart';
 import '../../../../common/widgets/report_card.dart';
 import '../../../auth/presentation/providers/auth_provider.dart';
 import '../../../notifications/presentation/providers/notification_provider.dart';
@@ -33,6 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     final auth = context.watch<AuthProvider>();
     final unreadCount = context.watch<NotificationProvider>().unreadCount;
 
@@ -44,8 +45,6 @@ class _HomeScreenState extends State<HomeScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               const SizedBox(height: AppConstants.spacingSm),
-
-              // User Greeting
               Row(
                 children: [
                   Container(
@@ -56,11 +55,8 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: IconButton(
-                      icon: const Icon(
-                        Icons.person_rounded,
-                        size: 28,
-                        color: AppColors.primary,
-                      ),
+                      icon: const Icon(Icons.person_rounded,
+                          size: 28, color: AppColors.primary),
                       onPressed: () => context.push('/profile'),
                     ),
                   ),
@@ -70,7 +66,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          '${AppStrings.hello}, ${auth.displayName}! 👋',
+                          '${l10n.hello}, ${auth.displayName}! 👋',
                           style: const TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.bold,
@@ -80,17 +76,13 @@ class _HomeScreenState extends State<HomeScreen> {
                         const SizedBox(height: 2),
                         Row(
                           children: [
-                            Icon(
-                              Icons.location_on_rounded,
-                              size: 14,
-                              color: AppColors.textSecondary.withValues(
-                                alpha: 0.7,
-                              ),
-                            ),
+                            Icon(Icons.location_on_rounded,
+                                size: 14,
+                                color: AppColors.textSecondary.withValues(alpha: 0.7)),
                             const SizedBox(width: 4),
-                            const Text(
-                              AppStrings.locationPlaceholder,
-                              style: TextStyle(
+                            Text(
+                              l10n.locationPlaceholder,
+                              style: const TextStyle(
                                 fontSize: 14,
                                 color: AppColors.textSecondary,
                               ),
@@ -147,31 +139,24 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: AppConstants.spacingXl),
-
-              // Emergency Banner
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(20),
                 decoration: BoxDecoration(
                   color: AppColors.primary,
-                  borderRadius: BorderRadius.circular(
-                    AppConstants.borderRadiusLg,
-                  ),
+                  borderRadius: BorderRadius.circular(AppConstants.borderRadiusLg),
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Row(
+                    Row(
                       children: [
-                        Icon(
-                          Icons.warning_rounded,
-                          color: Colors.white,
-                          size: 24,
-                        ),
-                        SizedBox(width: 8),
+                        const Icon(Icons.warning_rounded,
+                            color: Colors.white, size: 24),
+                        const SizedBox(width: 8),
                         Text(
-                          'Need to report an accident?',
-                          style: TextStyle(
+                          l10n.needToReportAccident,
+                          style: const TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.w600,
                             color: Colors.white,
@@ -181,7 +166,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     const SizedBox(height: 8),
                     Text(
-                      'Quickly file a report with photos, location, and details.',
+                      l10n.quicklyFileReport,
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.white.withValues(alpha: 0.85),
@@ -197,20 +182,19 @@ class _HomeScreenState extends State<HomeScreen> {
                           backgroundColor: Colors.white,
                           foregroundColor: AppColors.primary,
                           shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(
-                              AppConstants.borderRadius,
-                            ),
+                            borderRadius:
+                                BorderRadius.circular(AppConstants.borderRadius),
                           ),
                           elevation: 0,
                         ),
-                        child: const Row(
+                        child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Icon(Icons.add_circle_outline_rounded, size: 20),
-                            SizedBox(width: 8),
+                            const Icon(Icons.add_circle_outline_rounded, size: 20),
+                            const SizedBox(width: 8),
                             Text(
-                              AppStrings.reportAccident,
-                              style: TextStyle(
+                              l10n.reportAccident,
+                              style: const TextStyle(
                                 fontSize: 16,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -223,11 +207,9 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
               const SizedBox(height: AppConstants.spacingLg),
-
-              // Quick Actions
-              const Text(
-                'Quick Actions',
-                style: TextStyle(
+              Text(
+                l10n.quickActions,
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w600,
                   color: AppColors.textPrimary,
@@ -243,25 +225,25 @@ class _HomeScreenState extends State<HomeScreen> {
                 childAspectRatio: 1.3,
                 children: [
                   ActionCard(
-                    title: AppStrings.myReports,
+                    title: l10n.myReports,
                     icon: Icons.description_rounded,
                     iconColor: AppColors.primary,
                     onTap: () => context.push('/my-reports'),
                   ),
                   ActionCard(
-                    title: AppStrings.emergencyCall,
+                    title: l10n.emergencyCall,
                     icon: Icons.phone_in_talk_rounded,
                     iconColor: AppColors.error,
                     onTap: () => context.push('/emergency'),
                   ),
                   ActionCard(
-                    title: AppStrings.help,
+                    title: l10n.help,
                     icon: Icons.help_outline_rounded,
                     iconColor: AppColors.warning,
                     onTap: () => context.push('/help'),
                   ),
                   ActionCard(
-                    title: 'Insurance',
+                    title: l10n.insurance,
                     icon: Icons.shield_rounded,
                     iconColor: AppColors.primary,
                     onTap: () => context.push('/insurance'),
@@ -269,24 +251,15 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               const SizedBox(height: AppConstants.spacingLg),
-
-              // Recent Reports Section
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Recent Reports',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                 
-                ],
+              Text(
+                l10n.recentReports,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w600,
+                  color: AppColors.textPrimary,
+                ),
               ),
               const SizedBox(height: AppConstants.spacingMd),
-
               Consumer<ReportProvider>(
                 builder: (context, provider, _) {
                   if (provider.isLoading) {
@@ -306,31 +279,28 @@ class _HomeScreenState extends State<HomeScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 48),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(
-                          AppConstants.borderRadius,
-                        ),
+                        borderRadius:
+                            BorderRadius.circular(AppConstants.borderRadius),
                         border: Border.all(color: AppColors.border),
                       ),
                       child: Column(
                         children: [
-                          Icon(
-                            Icons.inbox_rounded,
-                            size: 48,
-                            color: AppColors.textHint.withValues(alpha: 0.5),
-                          ),
+                          Icon(Icons.inbox_rounded,
+                              size: 48,
+                              color: AppColors.textHint.withValues(alpha: 0.5)),
                           const SizedBox(height: 12),
-                          const Text(
-                            'No reports yet',
-                            style: TextStyle(
+                          Text(
+                            l10n.noReportsYet,
+                            style: const TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w500,
                               color: AppColors.textSecondary,
                             ),
                           ),
                           const SizedBox(height: 4),
-                          const Text(
-                            'Your accident reports will appear here',
-                            style: TextStyle(
+                          Text(
+                            l10n.reportsWillAppear,
+                            style: const TextStyle(
                               fontSize: 13,
                               color: AppColors.textHint,
                             ),
@@ -342,14 +312,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
                   return Column(
                     children: recent
-                        .map(
-                          (report) => ReportCard(
-                            report: report,
-                            onTap: () => context.push(
-                              '/report-details/${report.accidentId}',
-                            ),
-                          ),
-                        )
+                        .map((report) => ReportCard(
+                              report: report,
+                              onTap: () => context.push(
+                                  '/report-details/${report.accidentId}'),
+                            ))
                         .toList(),
                   );
                 },

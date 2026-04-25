@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
+import '../../../../core/l10n/app_localizations.dart';
+import '../../../../core/providers/locale_provider.dart';
 import '../../../../features/auth/data/services/biometric_service.dart';
 import '../../../../features/auth/presentation/providers/auth_provider.dart';
 
@@ -47,6 +49,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Future<void> _toggleBiometric(bool value) async {
+    final l10n = AppLocalizations(context.read<LocaleProvider>().isArabic);
     if (!value) {
       await _biometricService.setBiometricEnabled(false);
       setState(() => _biometricEnabled = false);
@@ -56,11 +59,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final messenger = ScaffoldMessenger.of(context);
     final available = await _biometricService.isAvailable();
     if (!available) {
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Biometric authentication not available on this device'),
-        ),
-      );
+      messenger.showSnackBar(SnackBar(content: Text(l10n.biometricNotAvailable)));
       return;
     }
 
@@ -69,72 +68,69 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (authenticated) {
       await _biometricService.setBiometricEnabled(true);
       setState(() => _biometricEnabled = true);
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Biometric login enabled'),
-          backgroundColor: AppColors.success,
-        ),
-      );
+      messenger.showSnackBar(SnackBar(
+        content: Text(l10n.biometricEnabled),
+        backgroundColor: AppColors.success,
+      ));
     } else {
-      messenger.showSnackBar(
-        const SnackBar(
-          content: Text('Authentication failed'),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      messenger.showSnackBar(SnackBar(
+        content: Text(l10n.authFailed),
+        backgroundColor: AppColors.error,
+      ));
     }
   }
 
   Future<void> _confirmDeleteCar(
       BuildContext context, AuthProvider auth, Map<String, dynamic> car) async {
+    final l10n = AppLocalizations(context.read<LocaleProvider>().isArabic);
     final messenger = ScaffoldMessenger.of(context);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Remove Vehicle'),
-        content: Text(
-          'Remove ${car['manufacturer'] ?? ''} ${car['plate_number'] ?? ''}?',
-        ),
+        title: Text(l10n.removeVehicle),
+        content: Text(l10n.removeVehicleConfirm(
+          car['manufacturer'] ?? '',
+          car['plate_number'] ?? '',
+        )),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Remove'),
+            child: Text(l10n.remove),
           ),
         ],
       ),
     );
     if (confirmed == true && mounted) {
-      final success =
-          await auth.deleteCar(car['car_registration_id'] as String);
+      final success = await auth.deleteCar(car['car_registration_id'] as String);
       if (!success && mounted && auth.error != null) {
         messenger.showSnackBar(
-          SnackBar(
-              content: Text(auth.error!), backgroundColor: AppColors.error),
+          SnackBar(content: Text(auth.error!), backgroundColor: AppColors.error),
         );
       }
     }
   }
 
   Future<void> _confirmSignOut(BuildContext context, AuthProvider auth) async {
+    final l10n = AppLocalizations(context.read<LocaleProvider>().isArabic);
     final confirmed = await showDialog<bool>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: const Text('Sign Out'),
-        content: const Text('Are you sure you want to sign out?'),
+        title: Text(l10n.signOutConfirmTitle),
+        content: Text(l10n.signOutConfirmMsg),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Cancel'),
+            child: Text(l10n.cancel),
           ),
           TextButton(
             onPressed: () => Navigator.pop(ctx, true),
             style: TextButton.styleFrom(foregroundColor: AppColors.error),
-            child: const Text('Sign Out'),
+            child: Text(l10n.signOut),
           ),
         ],
       ),
@@ -146,20 +142,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       backgroundColor: AppColors.scaffoldBackground,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon:
-              const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+          icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
           onPressed: () => context.pop(),
         ),
-        title: const Text(
-          'Profile & Settings',
-          style: TextStyle(
-              color: AppColors.textPrimary, fontWeight: FontWeight.bold),
+        title: Text(
+          l10n.profileSettings,
+          style: const TextStyle(color: AppColors.textPrimary, fontWeight: FontWeight.bold),
         ),
       ),
       body: Consumer<AuthProvider>(
@@ -172,17 +167,17 @@ class _ProfileScreenState extends State<ProfileScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                _buildProfileHeader(auth),
+                _buildProfileHeader(auth, l10n),
                 const SizedBox(height: AppConstants.spacingLg),
-                _buildPersonalInfoSection(auth),
+                _buildPersonalInfoSection(auth, l10n),
                 const SizedBox(height: AppConstants.spacingLg),
-                _buildVehiclesSection(context, auth),
+                _buildVehiclesSection(context, auth, l10n),
                 const SizedBox(height: AppConstants.spacingLg),
-                _buildPreferencesSection(),
+                _buildPreferencesSection(l10n),
                 const SizedBox(height: AppConstants.spacingLg),
-                _buildSecuritySection(),
+                _buildSecuritySection(l10n),
                 const SizedBox(height: AppConstants.spacingLg),
-                _buildAccountSection(context, auth),
+                _buildAccountSection(context, auth, l10n),
                 const SizedBox(height: AppConstants.spacingXl),
               ],
             ),
@@ -192,7 +187,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileHeader(AuthProvider auth) {
+  Widget _buildProfileHeader(AuthProvider auth, AppLocalizations l10n) {
     final name = auth.userProfile?['name'] as String? ?? '';
     final email = auth.userEmail ?? '';
     final initials = name.isNotEmpty
@@ -236,7 +231,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  name.isNotEmpty ? name : 'No name set',
+                  name.isNotEmpty ? name : l10n.noNameSet,
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
@@ -244,58 +239,52 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: 2),
-                Text(
-                  email,
-                  style: const TextStyle(
-                      fontSize: 14, color: AppColors.textSecondary),
-                ),
+                Text(email,
+                    style: const TextStyle(fontSize: 14, color: AppColors.textSecondary)),
               ],
             ),
           ),
           IconButton(
             onPressed: () => context.push('/profile/edit'),
-            icon: const Icon(Icons.edit_rounded,
-                color: AppColors.primary, size: 22),
-            tooltip: 'Edit Profile',
+            icon: const Icon(Icons.edit_rounded, color: AppColors.primary, size: 22),
+            tooltip: l10n.editProfile,
           ),
         ],
       ),
     );
   }
 
-  Widget _buildPersonalInfoSection(AuthProvider auth) {
+  Widget _buildPersonalInfoSection(AuthProvider auth, AppLocalizations l10n) {
     final profile = auth.userProfile;
     return _SectionCard(
-      title: 'Personal Information',
+      title: l10n.personalInformation,
       trailing: GestureDetector(
         onTap: () => context.push('/profile/edit'),
-        child: const Text(
-          'Edit',
-          style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.primary),
+        child: Text(
+          l10n.editLabel,
+          style: const TextStyle(
+              fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primary),
         ),
       ),
       children: [
         _InfoRow(
           icon: Icons.badge_rounded,
-          label: 'National ID',
+          label: l10n.nationalId,
           value: profile?['national_id'] as String? ?? '—',
         ),
         _InfoRow(
           icon: Icons.phone_rounded,
-          label: 'Phone Number',
+          label: l10n.phoneNumber,
           value: profile?['phone_number'] as String? ?? '—',
         ),
         _InfoRow(
           icon: Icons.calendar_today_rounded,
-          label: 'Date of Birth',
+          label: l10n.dateOfBirth,
           value: _formatDate(profile?['date_of_birth'] as String?),
         ),
         _InfoRow(
           icon: Icons.wc_rounded,
-          label: 'Gender',
+          label: l10n.gender,
           value: profile?['gender'] as String? ?? '—',
           isLast: true,
         ),
@@ -303,21 +292,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildVehiclesSection(BuildContext context, AuthProvider auth) {
+  Widget _buildVehiclesSection(BuildContext context, AuthProvider auth, AppLocalizations l10n) {
     return _SectionCard(
-      title: 'My Vehicles',
+      title: l10n.myVehicles,
       trailing: GestureDetector(
         onTap: () => context.push('/cars/add'),
         child: Row(
-          children: const [
-            Icon(Icons.add_rounded, size: 16, color: AppColors.primary),
-            SizedBox(width: 4),
+          children: [
+            const Icon(Icons.add_rounded, size: 16, color: AppColors.primary),
+            const SizedBox(width: 4),
             Text(
-              'Add',
-              style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.primary),
+              l10n.addLabel,
+              style: const TextStyle(
+                  fontSize: 14, fontWeight: FontWeight.w600, color: AppColors.primary),
             ),
           ],
         ),
@@ -329,13 +316,12 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 child: Center(
                   child: Column(
                     children: [
-                      Icon(Icons.directions_car_rounded,
+                      const Icon(Icons.directions_car_rounded,
                           size: 36, color: AppColors.textHint),
                       const SizedBox(height: 8),
-                      const Text(
-                        'No vehicles registered',
-                        style: TextStyle(
-                            fontSize: 14, color: AppColors.textSecondary),
+                      Text(
+                        l10n.noVehiclesRegisteredProfile,
+                        style: const TextStyle(fontSize: 14, color: AppColors.textSecondary),
                       ),
                     ],
                   ),
@@ -353,12 +339,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildPreferencesSection() {
+  Widget _buildPreferencesSection(AppLocalizations l10n) {
     return _SectionCard(
-      title: 'App Preferences',
+      title: l10n.appPreferences,
       children: [
         Padding(
           padding: const EdgeInsets.symmetric(
+              horizontal: AppConstants.paddingCard,
               vertical: AppConstants.spacingSm),
           child: Row(
             children: [
@@ -372,21 +359,18 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     size: 20, color: AppColors.primary),
               ),
               const SizedBox(width: AppConstants.spacingMd),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Push Notifications',
-                      style: TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                          color: AppColors.textPrimary),
+                      l10n.pushNotifications,
+                      style: const TextStyle(
+                          fontSize: 15, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
                     ),
                     Text(
-                      'Receive accident report updates',
-                      style: TextStyle(
-                          fontSize: 12, color: AppColors.textSecondary),
+                      l10n.receiveUpdates,
+                      style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
                     ),
                   ],
                 ),
@@ -399,13 +383,57 @@ class _ProfileScreenState extends State<ProfileScreen> {
             ],
           ),
         ),
+        const Divider(height: 1, color: AppColors.divider),
+        Padding(
+          padding: const EdgeInsets.symmetric(
+              horizontal: AppConstants.paddingCard,
+              vertical: AppConstants.spacingSm),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: AppColors.accentLight,
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: const Icon(Icons.language_rounded,
+                    size: 20, color: AppColors.primary),
+              ),
+              const SizedBox(width: AppConstants.spacingMd),
+              Expanded(
+                child: Text(
+                  l10n.languageLabel,
+                  style: const TextStyle(
+                      fontSize: 15, fontWeight: FontWeight.w500, color: AppColors.textPrimary),
+                ),
+              ),
+              Consumer<LocaleProvider>(
+                builder: (context, locale, _) => Row(
+                  children: [
+                    _LangButton(
+                      label: 'EN',
+                      isActive: !locale.isArabic,
+                      onTap: () => locale.setLanguageCode('en'),
+                    ),
+                    const SizedBox(width: 6),
+                    _LangButton(
+                      label: 'AR',
+                      isActive: locale.isArabic,
+                      onTap: () => locale.setLanguageCode('ar'),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
       ],
     );
   }
 
-  Widget _buildSecuritySection() {
+  Widget _buildSecuritySection(AppLocalizations l10n) {
     return _SectionCard(
-      title: 'SECURITY',
+      title: l10n.security,
       children: [
         SwitchListTile(
           contentPadding: const EdgeInsets.symmetric(
@@ -418,23 +446,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
               color: AppColors.accentLight,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(
-              Icons.fingerprint_rounded,
-              size: 20,
-              color: AppColors.primary,
-            ),
+            child: const Icon(Icons.fingerprint_rounded, size: 20, color: AppColors.primary),
           ),
-          title: const Text(
-            'Enable Biometric Login',
-            style: TextStyle(
+          title: Text(
+            l10n.biometricLogin,
+            style: const TextStyle(
               fontSize: 15,
               fontWeight: FontWeight.w500,
               color: AppColors.textPrimary,
             ),
           ),
-          subtitle: const Text(
-            'Use fingerprint or face recognition to sign in faster',
-            style: TextStyle(fontSize: 12, color: AppColors.textSecondary),
+          subtitle: Text(
+            l10n.biometricSubtitle,
+            style: const TextStyle(fontSize: 12, color: AppColors.textSecondary),
           ),
           value: _biometricEnabled,
           onChanged: _toggleBiometric,
@@ -444,13 +468,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildAccountSection(BuildContext context, AuthProvider auth) {
+  Widget _buildAccountSection(BuildContext context, AuthProvider auth, AppLocalizations l10n) {
     return _SectionCard(
-      title: 'Account',
+      title: l10n.account,
       children: [
         _ActionRow(
           icon: Icons.logout_rounded,
-          label: 'Sign Out',
+          label: l10n.signOut,
           iconColor: AppColors.error,
           textColor: AppColors.error,
           isLast: true,
@@ -468,6 +492,48 @@ class _ProfileScreenState extends State<ProfileScreen> {
     } catch (_) {
       return raw;
     }
+  }
+}
+
+// ── Language toggle button ────────────────────────────────────────────────────
+
+class _LangButton extends StatelessWidget {
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
+
+  const _LangButton({
+    required this.label,
+    required this.isActive,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: AnimatedContainer(
+        duration: AppConstants.animationFast,
+        height: 32,
+        width: 40,
+        decoration: BoxDecoration(
+          color: isActive ? AppColors.primary : Colors.transparent,
+          borderRadius: BorderRadius.circular(8),
+          border: Border.all(
+            color: isActive ? AppColors.primary : AppColors.border,
+          ),
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          label,
+          style: TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w600,
+            color: isActive ? Colors.white : AppColors.textSecondary,
+          ),
+        ),
+      ),
+    );
   }
 }
 
@@ -639,7 +705,6 @@ class _CarRow extends StatelessWidget {
                 onPressed: onDelete,
                 icon: const Icon(Icons.delete_outline_rounded,
                     size: 20, color: AppColors.error),
-                tooltip: 'Remove vehicle',
               ),
             ],
           ),
@@ -699,7 +764,7 @@ class _ActionRow extends StatelessWidget {
                         color: textColor),
                   ),
                 ),
-                Icon(Icons.chevron_right_rounded,
+                const Icon(Icons.chevron_right_rounded,
                     size: 20, color: AppColors.textHint),
               ],
             ),

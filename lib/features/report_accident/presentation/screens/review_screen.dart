@@ -2,9 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/constants/app_constants.dart';
-import '../../../../core/constants/app_strings.dart';
+import '../../../../core/l10n/app_localizations.dart';
 import '../../../../common/widgets/primary_button.dart';
 import '../../../../common/widgets/secondary_button.dart';
 import '../providers/report_provider.dart';
@@ -14,13 +15,14 @@ class ReviewScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final l10n = AppLocalizations.of(context);
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded),
           onPressed: () => context.pop(),
         ),
-        title: const Text(AppStrings.reviewReport),
+        title: Text(l10n.reviewReport),
       ),
       body: SafeArea(
         child: Consumer<ReportProvider>(
@@ -34,91 +36,100 @@ class ReviewScreen extends StatelessWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
-                          AppStrings.reviewSubtitle,
-                          style: TextStyle(
+                        Text(
+                          l10n.reviewSubtitle,
+                          style: const TextStyle(
                             fontSize: 15,
                             color: AppColors.textSecondary,
                           ),
                         ),
                         const SizedBox(height: AppConstants.spacingLg),
 
-                        // ── Session ────────────────────────────────────
                         _buildSection(
-                          title: 'Accident Session',
+                          title: l10n.accidentSessionSection,
                           icon: Icons.qr_code_rounded,
                           child: _buildInfoRow(
-                            'Session ID',
-                            provider.sessionId ?? 'Not selected',
+                            l10n.sessionId,
+                            provider.sessionId ?? '—',
                           ),
                         ),
                         const SizedBox(height: AppConstants.spacingMd),
 
-                        // ── Location ───────────────────────────────────
                         _buildSection(
-                          title: AppStrings.accidentLocation,
+                          title: l10n.accidentLocation,
                           icon: Icons.location_on_rounded,
                           child: provider.latitude != null
-                              ? Column(
-                                  children: [
-                                    _buildInfoRow(
-                                      'Latitude',
-                                      provider.latitude!.toStringAsFixed(6),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    _buildInfoRow(
-                                      'Longitude',
-                                      provider.longitude!.toStringAsFixed(6),
-                                    ),
-                                  ],
+                              ? GestureDetector(
+                                  onTap: () async {
+                                    final uri = Uri.parse(
+                                      'https://www.google.com/maps/search/?api=1&query=${provider.latitude},${provider.longitude}',
+                                    );
+                                    await launchUrl(uri, mode: LaunchMode.externalApplication);
+                                  },
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      const Icon(Icons.location_on_outlined, size: 18, color: AppColors.primary),
+                                      const SizedBox(width: 6),
+                                      Text(
+                                        l10n.viewOnMap,
+                                        style: const TextStyle(
+                                          color: AppColors.primary,
+                                          fontSize: 14,
+                                          fontWeight: FontWeight.w500,
+                                          decoration: TextDecoration.underline,
+                                          decorationColor: AppColors.primary,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
                                 )
                               : _buildInfoRow(
-                                  'Location',
+                                  l10n.locationLabel,
                                   provider.locationText,
                                 ),
                         ),
                         const SizedBox(height: AppConstants.spacingMd),
 
-                        // ── Your Vehicle ───────────────────────────────
                         if (car != null) ...[
                           _buildSection(
-                            title: 'Your Vehicle',
+                            title: l10n.yourVehicle,
                             icon: Icons.directions_car_rounded,
                             child: Column(
                               children: [
                                 _buildInfoRow(
-                                  'Make',
+                                  l10n.make,
                                   car['manufacturer'] as String? ?? '—',
                                 ),
                                 const SizedBox(height: 8),
                                 _buildInfoRow(
-                                  'Type',
+                                  l10n.type,
                                   car['car_type'] as String? ?? '—',
                                 ),
                                 if ((car['color'] as String?)?.isNotEmpty ==
                                     true) ...[
                                   const SizedBox(height: 8),
                                   _buildInfoRow(
-                                    'Color',
+                                    l10n.color,
                                     car['color'] as String,
                                   ),
                                 ],
                                 if (car['year'] != null) ...[
                                   const SizedBox(height: 8),
                                   _buildInfoRow(
-                                    'Year',
+                                    l10n.year,
                                     car['year'].toString(),
                                   ),
                                 ],
                                 const SizedBox(height: 8),
                                 _buildInfoRow(
-                                  'Plate',
+                                  l10n.plate,
                                   provider.vehiclePlateNumber,
                                 ),
                                 if (provider.insuranceCompany.isNotEmpty) ...[
                                   const SizedBox(height: 8),
                                   _buildInfoRow(
-                                    'Insurance',
+                                    l10n.insuranceCompany,
                                     provider.insuranceCompany,
                                   ),
                                 ],
@@ -127,7 +138,7 @@ class ReviewScreen extends StatelessWidget {
                                     true) ...[
                                   const SizedBox(height: 8),
                                   _buildInfoRow(
-                                    'Policy ID',
+                                    l10n.policyId,
                                     car['insurance_id'] as String,
                                   ),
                                 ],
@@ -137,26 +148,22 @@ class ReviewScreen extends StatelessWidget {
                           const SizedBox(height: AppConstants.spacingMd),
                         ],
 
-                        // ── Reporter Details ───────────────────────────
                         _buildSection(
-                          title: AppStrings.details,
+                          title: l10n.details,
                           icon: Icons.person_rounded,
                           child: Column(
                             children: [
-                              _buildInfoRow(
-                                AppStrings.fullName,
-                                provider.fullName,
-                              ),
+                              _buildInfoRow(l10n.fullName, provider.fullName),
                               const SizedBox(height: 8),
                               _buildInfoRow(
-                                AppStrings.phoneNumber,
+                                l10n.phoneNumber,
                                 provider.phoneNumber,
                               ),
                               if (car == null &&
                                   provider.vehiclePlateNumber.isNotEmpty) ...[
                                 const SizedBox(height: 8),
                                 _buildInfoRow(
-                                  'Plate',
+                                  l10n.plate,
                                   provider.vehiclePlateNumber,
                                 ),
                               ],
@@ -164,7 +171,7 @@ class ReviewScreen extends StatelessWidget {
                                   provider.insuranceCompany.isNotEmpty) ...[
                                 const SizedBox(height: 8),
                                 _buildInfoRow(
-                                  AppStrings.insuranceCompany,
+                                  l10n.insuranceCompany,
                                   provider.insuranceCompany,
                                 ),
                               ],
@@ -173,34 +180,15 @@ class ReviewScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: AppConstants.spacingMd),
 
-                        // ── Accident Details ───────────────────────────
                         _buildSection(
-                          title: 'Accident Details',
+                          title: l10n.accidentDetails,
                           icon: Icons.car_crash_rounded,
                           child: Column(
                             children: [
-                              if (provider.accidentType.isNotEmpty) ...[
-                                _buildInfoRow(
-                                  'Type',
-                                  provider.accidentType,
-                                ),
-                                const SizedBox(height: 8),
-                              ],
-                              if (provider.weatherCondition.isNotEmpty) ...[
-                                _buildInfoRow(
-                                  'Weather',
-                                  provider.weatherCondition,
-                                ),
-                                const SizedBox(height: 8),
-                              ],
-                              _buildInfoRow(
-                                'Injuries',
-                                provider.injuriesReported ? 'Yes' : 'No',
-                              ),
                               if (provider.accidentDescription.isNotEmpty) ...[
                                 const SizedBox(height: 8),
                                 _buildInfoRow(
-                                  AppStrings.accidentDescription,
+                                  l10n.accidentDescription,
                                   provider.accidentDescription,
                                 ),
                               ],
@@ -209,14 +197,13 @@ class ReviewScreen extends StatelessWidget {
                         ),
                         const SizedBox(height: AppConstants.spacingMd),
 
-                        // ── Evidence ───────────────────────────────────
                         _buildSection(
-                          title: AppStrings.evidence,
+                          title: l10n.evidence,
                           icon: Icons.photo_library_rounded,
                           child: provider.images.isEmpty
-                              ? const Text(
-                                  'No photos captured',
-                                  style: TextStyle(
+                              ? Text(
+                                  l10n.noPhotosCaptured,
+                                  style: const TextStyle(
                                     fontSize: 14,
                                     color: AppColors.textSecondary,
                                   ),
@@ -225,7 +212,9 @@ class ReviewScreen extends StatelessWidget {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Text(
-                                      '${provider.images.length} photo(s) captured',
+                                      l10n.photosCountLabel(
+                                        provider.images.length,
+                                      ),
                                       style: const TextStyle(
                                         fontSize: 14,
                                         color: AppColors.textSecondary,
@@ -262,13 +251,12 @@ class ReviewScreen extends StatelessWidget {
                   ),
                 ),
 
-                // Bottom Buttons
                 Padding(
                   padding: const EdgeInsets.all(AppConstants.paddingScreen),
                   child: Column(
                     children: [
                       PrimaryButton(
-                        text: AppStrings.submit,
+                        text: l10n.submit,
                         icon: Icons.send_rounded,
                         onPressed: provider.isLoading
                             ? null
@@ -286,12 +274,9 @@ class ReviewScreen extends StatelessWidget {
                                   }
                                 } catch (_) {
                                   if (context.mounted) {
+                                    final l = AppLocalizations.of(context);
                                     ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text(
-                                          'Failed to submit report. Please try again.',
-                                        ),
-                                      ),
+                                      SnackBar(content: Text(l.failedToSubmit)),
                                     );
                                   }
                                 }
@@ -299,7 +284,7 @@ class ReviewScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: AppConstants.spacingSm + 4),
                       SecondaryButton(
-                        text: AppStrings.edit,
+                        text: l10n.edit,
                         icon: Icons.edit_rounded,
                         onPressed: () => context.pop(),
                       ),

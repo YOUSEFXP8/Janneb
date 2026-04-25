@@ -34,6 +34,9 @@ class ReportProvider extends ChangeNotifier {
   String? _sessionId;
   String? get sessionId => _sessionId;
 
+  bool _isJoiningSession = false;
+  bool get isJoiningSession => _isJoiningSession;
+
   bool _isLoading = false;
   bool get isLoading => _isLoading;
 
@@ -77,16 +80,6 @@ class ReportProvider extends ChangeNotifier {
   String _accidentDescription = '';
   String get accidentDescription => _accidentDescription;
 
-  // Accident-specific details
-  String _accidentType = '';
-  String get accidentType => _accidentType;
-
-  String _weatherCondition = '';
-  String get weatherCondition => _weatherCondition;
-
-  bool _injuriesReported = false;
-  bool get injuriesReported => _injuriesReported;
-
   // Generate a local join code; actual accident record is created at review/submit time.
   Future<void> createSession() async {
     _isLoading = true;
@@ -94,16 +87,17 @@ class ReportProvider extends ChangeNotifier {
     try {
       final rand = Random.secure();
       _sessionId = List.generate(6, (_) => rand.nextInt(10)).join();
+      _isJoiningSession = false;
     } finally {
       _isLoading = false;
       notifyListeners();
     }
   }
 
-  // Called by QR scanner path — stores the scanned code locally.
-  // TODO: also call join_accident RPC here once car selection is added to the scanner flow.
+  // Called by QR scanner path — stores the scanned code and marks this as a join.
   Future<void> joinSession(String id) async {
     _sessionId = id;
+    _isJoiningSession = true;
     notifyListeners();
   }
 
@@ -118,12 +112,15 @@ class ReportProvider extends ChangeNotifier {
     notifyListeners();
     try {
       final client = Supabase.instance.client;
-      await client.rpc('join_accident', params: {
-        'p_join_code': joinCode,
-        'p_national_id': nationalId,
-        'p_car_registration_id': carRegistrationId,
-        'p_statement': '',
-      });
+      await client.rpc(
+        'join_accident',
+        params: {
+          'p_join_code': joinCode,
+          'p_national_id': nationalId,
+          'p_car_registration_id': carRegistrationId,
+          'p_statement': '',
+        },
+      );
       _sessionId = joinCode;
     } on PostgrestException {
       rethrow;
@@ -136,7 +133,7 @@ class ReportProvider extends ChangeNotifier {
     }
   }
 
-  // Called from ReviewScreen on submit — creates the accident record and uploads media.
+  // Called from ReviewScreen on submit — joins or creates the accident record and uploads media.
   Future<void> submitReport() async {
     _isLoading = true;
     _reportError = null;
@@ -145,14 +142,37 @@ class ReportProvider extends ChangeNotifier {
       final client = Supabase.instance.client;
       final nationalId =
           client.auth.currentUser?.userMetadata?['national_id'] as String?;
-      final result = await client.rpc('create_accident', params: {
-        'p_national_id': nationalId,
-        'p_car_registration_id': _selectedCar?['car_registration_id'],
-        'p_lat': _latitude,
-        'p_long': _longitude,
-        'p_statement': _accidentDescription,
-      });
-      final accidentId = result['accident_id'] as int?;
+
+      int? accidentId;
+
+      if (_isJoiningSession) {
+        // User scanned someone else's QR — join the existing accident.
+        final result = await client.rpc(
+          'join_accident',
+          params: {
+            'p_join_code': _sessionId,
+            'p_national_id': nationalId,
+            'p_car_registration_id': _selectedCar?['car_registration_id'],
+            'p_statement': _accidentDescription,
+          },
+        );
+        accidentId = result?['accident_id'] as int?;
+      } else {
+        // User created the session — create a new accident record.
+        final result = await client.rpc(
+          'create_accident',
+          params: {
+            'p_national_id': nationalId,
+            'p_car_registration_id': _selectedCar?['car_registration_id'],
+            'p_lat': _latitude,
+            'p_long': _longitude,
+            'p_statement': _accidentDescription,
+            'p_join_code': _sessionId,
+          },
+        );
+        accidentId = result['accident_id'] as int?;
+      }
+
       _lastAccidentId = accidentId;
 
       // Upload captured images to accident-media bucket.
@@ -161,7 +181,9 @@ class ReportProvider extends ChangeNotifier {
           try {
             final path =
                 '$accidentId/${DateTime.now().millisecondsSinceEpoch}_$i.jpg';
-            await client.storage.from('accident-media').upload(
+            await client.storage
+                .from('accident-media')
+                .upload(
                   path,
                   _images[i],
                   fileOptions: const FileOptions(
@@ -169,8 +191,9 @@ class ReportProvider extends ChangeNotifier {
                     upsert: true,
                   ),
                 );
-            final url =
-                client.storage.from('accident-media').getPublicUrl(path);
+            final url = client.storage
+                .from('accident-media')
+                .getPublicUrl(path);
             await client.from('accident_media').insert({
               'accident_id': accidentId,
               'file_url': url,
@@ -208,7 +231,8 @@ class ReportProvider extends ChangeNotifier {
         ..clear()
         ..addAll(
           (response as List).map(
-            (r) => AccidentReport.fromMap(r['accident'] as Map<String, dynamic>),
+            (r) =>
+                AccidentReport.fromMap(r['accident'] as Map<String, dynamic>),
           ),
         )
         ..sort((a, b) => b.date.compareTo(a.date));
@@ -224,6 +248,7 @@ class ReportProvider extends ChangeNotifier {
 
   void resetSession() {
     _sessionId = null;
+    _isJoiningSession = false;
     notifyListeners();
   }
 
@@ -261,23 +286,18 @@ class ReportProvider extends ChangeNotifier {
     required String vehiclePlateNumber,
     required String insuranceCompany,
     required String accidentDescription,
-    required String accidentType,
-    required String weatherCondition,
-    required bool injuriesReported,
   }) {
     _fullName = fullName;
     _phoneNumber = phoneNumber;
     _vehiclePlateNumber = vehiclePlateNumber;
     _insuranceCompany = insuranceCompany;
     _accidentDescription = accidentDescription;
-    _accidentType = accidentType;
-    _weatherCondition = weatherCondition;
-    _injuriesReported = injuriesReported;
     notifyListeners();
   }
 
   void resetReport() {
     _sessionId = null;
+    _isJoiningSession = false;
     _isLoading = false;
     _images.clear();
     _locationText = 'Amman, Jordan';
@@ -290,9 +310,6 @@ class ReportProvider extends ChangeNotifier {
     _vehiclePlateNumber = '';
     _insuranceCompany = '';
     _accidentDescription = '';
-    _accidentType = '';
-    _weatherCondition = '';
-    _injuriesReported = false;
     _lastAccidentId = null;
     _reportError = null;
     notifyListeners();
